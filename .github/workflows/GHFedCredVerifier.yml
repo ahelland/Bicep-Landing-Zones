@@ -1,6 +1,8 @@
 name: Run Azure Login with OpenID Connect
-on: [push]
-
+#on: [push]
+on:
+  workflow_dispatch:
+  
 permissions:
       id-token: write
       contents: read
