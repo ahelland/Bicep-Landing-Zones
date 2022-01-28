@@ -29,6 +29,5 @@ jobs:
       with:
         inlineScript: |
           az deployment sub \
-            --deploymentName ${{ github.run_number }} \
             --template-file ./rg-as-verification/main.bicep \
-            --parameters @./rg-as-verification/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }}
+            --parameters @./rg-as-verification/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env='${{ github.event.inputs.environment }}'
