@@ -28,7 +28,7 @@ jobs:
       uses: azure/cli@v1
       with:
         inlineScript: |
-          az deployment sub create \
+          az deployment sub create --location norwayeast \
             --name ${{ github.run_number }} \
             --template-file ./rg-as-verification/main.bicep \
             --parameters @./rg-as-verification/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env='${{ github.event.inputs.environment }}'
