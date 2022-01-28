@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
     steps:
+    - uses: actions/checkout@v2
     - name: 'Az CLI login'
       uses: azure/login@v1
       with:
@@ -25,7 +26,6 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   
     - name: 'Deploy Resource Group'
-      uses: actions/checkout@v2
       uses: azure/cli@v1      
       with:
         inlineScript: |
