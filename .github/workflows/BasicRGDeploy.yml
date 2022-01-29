@@ -47,6 +47,15 @@ jobs:
           parameters: ./rg-as-verification/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }}
           deploymentMode: Validate
 
+      - name: 'Run what-if'
+        uses: azure/cli@v1      
+        with: 
+          inlineScript: |
+            az deployment sub what-if --location norwayeast \
+              --name ${{ github.run_number }} \
+              --template-file ./rg-as-verification/main.bicep \
+              --parameters ./rg-as-verification/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }}
+
   Deploy:
     runs-on: ubuntu-latest
     needs: validate
