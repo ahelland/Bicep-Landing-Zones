@@ -44,7 +44,7 @@ jobs:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           deploymentName: ${{ github.run_number }}         
           template: ./rg-as-verification/main.bicep
-          parameters: ./rg-as-verification/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env='${{ github.event.inputs.environment }}'
+          parameters: ./rg-as-verification/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }}
           deploymentMode: Validate
 
   Deploy:
@@ -68,4 +68,4 @@ jobs:
           az deployment sub create --location norwayeast \
             --name ${{ github.run_number }} \
             --template-file ./rg-as-verification/main.bicep \
-            --parameters ./rg-as-verification/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env='${{ github.event.inputs.environment }}'
+            --parameters ./rg-as-verification/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }}
