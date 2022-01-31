@@ -1,0 +1,36 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "northeurope"
+        },
+        "appName": {
+            "value": "hellofoo"
+        },
+        "aspEnvironment": {
+            "value": "Development"
+        },
+        "frontendContainerImage": {
+            "value": "ahelland/hellofoo-frontend:latest"
+        },
+        "backendContainerImage": {
+            "value": "ahelland/hellofoo-backend:latest"
+        },
+        "backendAPIEndpoint": {
+            "value": "/api/values"
+        },
+        "containerPort": {
+            "value": 80
+        },
+        "registry": {
+            "value": "docker.io"
+        },
+        "registryUsername": {
+            "value": ""
+        },
+        "registryPassword": {
+            "value": ""
+        }
+    }
+}
