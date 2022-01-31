@@ -1,0 +1,94 @@
+name: Deploy frontend + backend to Azure Container Apps
+#on: [push]
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to verify'
+        type: environment
+        required: true
+  
+permissions:
+      id-token: write
+      contents: read
+      
+jobs: 
+  lint:
+    name: Lint code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Lint code
+        run: |
+          az bicep build --file ./azure-container-app/main.bicep
+
+  Validate:
+    runs-on: ubuntu-latest
+    needs: lint
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: 'Az CLI login'
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: 'Run preflight validation'
+        uses: azure/arm-deploy@v1
+        with: 
+          scope: subscription
+          region: norwayeast
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          deploymentName: ${{ github.run_number }}         
+          template: ./azure-container-app/main.bicep
+          parameters: ./azure-container-app/configurations/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }}
+          deploymentMode: Validate
+
+  What-if:
+    runs-on: ubuntu-latest
+    needs: lint
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: 'Az CLI login'
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: 'Run what-if'
+        uses: azure/cli@v1      
+        with: 
+          inlineScript: |
+            az deployment sub what-if --location norwayeast \
+              --name ${{ github.run_number }} \
+              --template-file ./azure-container-app/main.bicep \
+              --parameters ./azure-container-app/configurations/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }}
+
+  Deploy:
+    runs-on: ubuntu-latest
+    needs: validate
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: 'Az CLI login'
+      uses: azure/login@v1
+      with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  
+    - name: 'Deploy Azure Container App'
+      uses: azure/cli@v1      
+      with:
+        inlineScript: |
+          az deployment sub create --location norwayeast \
+            --name ${{ github.run_number }} \
+            --template-file ./azure-container-app/main.bicep \
+            --parameters ./azure-container-app/configurations/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }}
