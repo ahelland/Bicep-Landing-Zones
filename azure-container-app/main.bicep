@@ -3,6 +3,8 @@ targetScope = 'subscription'
 param location string
 param env string
 param appName string
+@description('Tags retrieved from parameter file.')
+param resourceTags object = {}
 
 param frontendContainerImage string
 param backendContainerImage string
@@ -18,6 +20,7 @@ param registryPassword string
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: 'rg-${env}-${appName}'
   location: location
+  tags: resourceTags
 }
 
 module containerAppEnvironment 'container-environment.bicep' = {
