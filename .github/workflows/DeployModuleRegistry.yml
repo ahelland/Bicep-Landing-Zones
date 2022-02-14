@@ -7,6 +7,15 @@ on:
         description: 'Environment to verify'
         type: environment
         required: true
+      location:
+        description: 'Region for deployment'
+        type: choice
+        default: 'norwayeast'
+        required: true
+        options:
+        - norwayeast
+        - northeurope
+        - eastus
   
 permissions:
       id-token: write
@@ -44,6 +53,7 @@ jobs:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           deploymentName: ${{ github.run_number }}         
           template: ./modules/bootstrap/main.bicep
+          parameters: location=${{ github.event.inputs.location }} env=${{ github.event.inputs.environment }}
           deploymentMode: Validate
 
   What-if:
@@ -67,6 +77,7 @@ jobs:
             az deployment sub what-if --location norwayeast \
               --name ${{ github.run_number }} \
               --template-file ./modules/bootstrap/main.bicep \
+              --parameters location=${{ github.event.inputs.location }} env=${{ github.event.inputs.environment }}
 
   Deploy:
     runs-on: ubuntu-latest
@@ -89,3 +100,4 @@ jobs:
           az deployment sub create --location norwayeast \
             --name ${{ github.run_number }} \
             --template-file ./modules/bootstrap/main.bicep \
+            --parameters location=${{ github.event.inputs.location }} env=${{ github.event.inputs.environment }}
