@@ -123,7 +123,7 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     
     - name: 'Public Bicep Modules'
-      run: bicep publish --file ./modules/azure-container-app/container-environment.bicep --target br:${{ secrets.BICEP_MODULE_REGISTRY }}.azurecr.io/bicep/modules/aca-environment:0.1
+      run: bicep publish ./modules/azure-container-app/container-environment.bicep --target br:${{ secrets.BICEP_MODULE_REGISTRY }}.azurecr.io/bicep/modules/aca-environment:0.1
   
     #- name: 'Deploy Module Azure Container Apps'
     #  uses: azure/cli@v1      
