@@ -108,6 +108,8 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     
     # az bicep publish is not supported on GitHub runners yet
-    - name: 'Public Bicep Modules'
+    - name: 'Publish Container Environment Module'
       run: bicep publish ./modules/azure-container-app/container-environment.bicep --target br:${{ secrets.BICEP_MODULE_REGISTRY }}.azurecr.io/bicep/modules/aca-environment:0.1 \
+
+    - name: 'Publish Container App Module'
       run: bicep publish ./modules/azure-container-app/container-app.bicep --target br:${{ secrets.BICEP_MODULE_REGISTRY }}.azurecr.io/bicep/modules/aca-app:0.1
