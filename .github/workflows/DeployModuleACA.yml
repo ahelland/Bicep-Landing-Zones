@@ -89,21 +89,21 @@ jobs:
               --template-file ./modules/azure-container-app/Example/main.bicep \
               --parameters ./modules/azure-container-app/Example/azuredeploy.Dev.parameters.json env=Dev
               
-      - name: add-what-if-to-comment
-        uses: actions/github-script@v3
-        #if: github.event_name == 'pull_request'
-        with:
-          #github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const output = 'Results of what-if: \'
-            {{ steps.what-if.outputs.stdout }};
+      #- name: add-what-if-to-comment
+      #  uses: actions/github-script@v3
+      #  #if: github.event_name == 'pull_request'
+      #  with:
+      #    #github-token: ${{ secrets.GITHUB_TOKEN }}
+      #    script: |
+      #      const output = 'Results of what-if: \'
+      #      {{ steps.what-if.outputs.stdout }};
             
-            github.issues.createComment({
-              issue_number; context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
+      #      github.issues.createComment({
+      #        issue_number; context.issue.number,
+      #        owner: context.repo.owner,
+      #        repo: context.repo.repo,
+      #        body: output
+      #      })
 
   Deploy:
     runs-on: ubuntu-latest
