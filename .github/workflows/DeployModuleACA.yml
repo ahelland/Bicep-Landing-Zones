@@ -126,5 +126,5 @@ jobs:
       uses: azure/cli@v1      
       with:
         inlineScript: |
-          az bicep publish --file ./modules/azure-container-app/container-environment.bicep --target br:${{ secrets.BICEP_MODULE_REGISTRY }}.azurecr.io/bicep/modules/aca-environment:0.1 \
-          az bicep publish --file ./modules/azure-container-app/container-app.bicep --target br:${{ secrets.BICEP_MODULE_REGISTRY }}.azurecr.io/bicep/modules/aca-app:0.1
+          bicep publish --file ./modules/azure-container-app/container-environment.bicep --target br:${{ secrets.BICEP_MODULE_REGISTRY }}.azurecr.io/bicep/modules/aca-environment:0.1 \
+          bicep publish --file ./modules/azure-container-app/container-app.bicep --target br:${{ secrets.BICEP_MODULE_REGISTRY }}.azurecr.io/bicep/modules/aca-app:0.1
