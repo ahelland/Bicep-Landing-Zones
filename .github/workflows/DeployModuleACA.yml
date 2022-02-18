@@ -62,7 +62,7 @@ jobs:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           deploymentName: ${{ github.run_number }}         
           template: ./modules/azure-container-app/Example/main.bicep
-          parameters: location=norwayeast env=dev
+          parameters: ./modules/azure-container-app/Example/azuredeploy.Dev.parameters.json env=dev
           deploymentMode: Validate
 
   What-if:
