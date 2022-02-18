@@ -23,7 +23,7 @@ on:
         - eastus
 
 env:
-  environment: dev
+  environment: Dev
   location: norwayeast
 
 permissions:
