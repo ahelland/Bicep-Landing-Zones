@@ -43,7 +43,7 @@ jobs:
   Validate:
     runs-on: ubuntu-latest
     needs: Lint
-    environment: Dev
+    #environment: Dev
     steps:
       - uses: actions/checkout@v2
       
@@ -68,7 +68,7 @@ jobs:
   What-if:
     runs-on: ubuntu-latest
     needs: Validate
-    environment: Dev
+    #environment: Dev
     steps:
       - uses: actions/checkout@v2
       
