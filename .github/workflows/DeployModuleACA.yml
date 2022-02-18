@@ -112,6 +112,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     
+    - name: 'Install Bicep CLI'
+      uses: anthony-c-martin/setup-bicep@v0.1 
+
     - name: 'Az CLI login'
       uses: azure/login@v1
       with:
