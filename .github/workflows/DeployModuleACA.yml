@@ -43,7 +43,7 @@ jobs:
   Validate:
     runs-on: ubuntu-latest
     needs: Lint
-    environment: ${{ github.event.inputs.environment }}
+    #environment: ${{ github.event.inputs.environment }}
     steps:
       - uses: actions/checkout@v2
       
