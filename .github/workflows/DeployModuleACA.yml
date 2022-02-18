@@ -68,7 +68,7 @@ jobs:
   What-if:
     runs-on: ubuntu-latest
     needs: Validate
-    environment: ${{ github.event.inputs.environment }}
+    environment: Dev
     steps:
       - uses: actions/checkout@v2
       
@@ -87,7 +87,7 @@ jobs:
             az deployment sub what-if --location norwayeast \
               --name ${{ github.run_number }} \
               --template-file ./modules/azure-container-app/Example/main.bicep \
-              --parameters location=${{ github.event.inputs.location }} env=${{ github.event.inputs.environment }}
+              --parameters ./modules/azure-container-app/Example/azuredeploy.Dev.parameters.json env=Dev
               
       - name: add-what-if-to-comment
         uses: actions/github-script@v3
