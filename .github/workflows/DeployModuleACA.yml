@@ -125,9 +125,8 @@ jobs:
     
     # az bicep publish is not supported on GitHub runners yet
     - name: 'Public Bicep Modules'
-      run: |
-        bicep publish ./modules/azure-container-app/container-environment.bicep --target br:${{ secrets.BICEP_MODULE_REGISTRY }}.azurecr.io/bicep/modules/aca-environment:0.1 \
-        bicep publish ./modules/azure-container-app/container-app.bicep --target br:${{ secrets.BICEP_MODULE_REGISTRY }}.azurecr.io/bicep/modules/aca-app:0.1
+      run: bicep publish ./modules/azure-container-app/container-environment.bicep --target br:${{ secrets.BICEP_MODULE_REGISTRY }}.azurecr.io/bicep/modules/aca-environment:0.1 \
+      run: bicep publish ./modules/azure-container-app/container-app.bicep --target br:${{ secrets.BICEP_MODULE_REGISTRY }}.azurecr.io/bicep/modules/aca-app:0.1
   
     #- name: 'Deploy Module Azure Container Apps'
     #  uses: azure/cli@v1      
