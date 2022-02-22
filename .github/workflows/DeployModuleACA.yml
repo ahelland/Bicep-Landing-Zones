@@ -2,6 +2,8 @@ name: Deploy Module - Azure Container Apps
 
 on: 
   push:
+    paths:
+      - './modules/azure-container-app/**'
   pull_request:
     paths:
       - './modules/azure-container-app/**'
