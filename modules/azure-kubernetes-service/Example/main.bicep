@@ -7,8 +7,8 @@ param resourceTags object = {}
 
 // Dummy value since this only verifies the module
 param adminGroupId string = ''
-param k8Sversion string = '1.22.6'
-param vmSize string = 'Standard_DS2_v2'
+param k8Sversion string
+param vmSize string
 
 resource rg_vnet 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: 'rg-${env}-vnet'
