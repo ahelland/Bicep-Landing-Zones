@@ -1,0 +1,117 @@
+
+name: Deploy Module - Web App Container
+
+on: 
+  push:
+    paths:
+      - './modules/azure-app-service/**'
+  pull_request:
+    paths:
+      - './modules/azure-app-service/**'
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to verify'
+        type: environment
+        required: true
+      location:
+        description: 'Region for deployment'
+        type: choice
+        default: 'norwayeast'
+        required: true
+        options:
+        - norwayeast
+        - northeurope
+        - eastus
+
+env:
+  environment: Dev
+  location: norwayeast
+
+permissions:
+      id-token: write
+      contents: read
+
+jobs: 
+  Lint:
+    name: Lint code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Lint code
+        run: |
+          az bicep build --file ./modules/azure-app-service/Example/main.bicep    
+
+  Validate:
+    runs-on: ubuntu-latest
+    needs: Lint
+    environment: Dev
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: 'Az CLI login'
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: 'Run preflight validation'
+        uses: azure/arm-deploy@v1
+        with: 
+          scope: subscription
+          region: norwayeast
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          deploymentName: ${{ github.run_number }}         
+          template: ./modules/azure-app-service/Example/main.bicep
+          parameters: ./modules/azure-app-service/Example/azuredeploy.Dev.parameters.json env=dev
+          deploymentMode: Validate
+
+  What-if:
+    runs-on: ubuntu-latest
+    needs: Validate
+    environment: Dev
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: 'Az CLI login'
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: 'Run what-if'
+        id: what-if
+        uses: azure/cli@v1      
+        with: 
+          inlineScript: |
+            az deployment sub what-if --location norwayeast \
+              --name ${{ github.run_number }} \
+              --template-file ./modules/azure-app-service/Example/main.bicep \
+              --parameters ./modules/azure-app-service/Example/azuredeploy.Dev.parameters.json env=Dev
+  Deploy:
+    runs-on: ubuntu-latest
+    needs: What-if
+    environment: Dev
+    steps:
+    - uses: actions/checkout@v2
+    
+    # az bicep publish is not supported on GitHub runners yet
+    - name: 'Install Bicep CLI'
+      uses: anthony-c-martin/setup-bicep@v0.1 
+
+    - name: 'Az CLI login'
+      uses: azure/login@v1
+      with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+    
+    # az bicep publish is not supported on GitHub runners yet
+    - name: 'Publish App Service Plan Module'
+      run: bicep publish ./modules/azure-app-service/app-service-plan.bicep --target br:${{ secrets.BICEP_MODULE_REGISTRY }}.azurecr.io/bicep/modules/app-service-plan:0.1 \
+
+    - name: 'Publish App Service Module'
+      run: bicep publish ./modules/azure-app-service/app-service.bicep --target br:${{ secrets.BICEP_MODULE_REGISTRY }}.azurecr.io/bicep/modules/app-service:0.1 \
