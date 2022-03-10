@@ -1,0 +1,48 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "resourceTags": {
+            "value": {
+                "IaC": "Bicep",
+                "Source": "GitHub" 
+            }
+        },
+        "location": {
+            "value": "northeurope"
+        },
+        "appName":{
+            "value": "dummy"
+        },
+        "alwaysOn": {
+            "value": true
+        },
+        "easyauthEnabled": {
+            "value": true
+        },
+        "aadProviderEnabled":{
+            "value": true
+        },
+        "sku": {
+            "value": "Basic"
+        },
+        "skuCode": {
+            "value": "B1"
+        },
+        "linuxFxVersion": {
+            "value": "DOCKER|mcr.microsoft.com/appsvc/staticsite:latest"
+        },
+        "dockerRegistryUrl": {
+            "value": "https://mcr.microsoft.com"
+        },
+        "dockerRegistryUsername": {
+            "value": ""
+        },
+        "dockerRegistryPassword": {
+            "value": ""
+        },
+        "dockerRegistryStartupCommand": {
+            "value": ""
+        }
+    }
+}
