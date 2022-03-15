@@ -76,7 +76,13 @@ resource appservice 'Microsoft.Web/sites@2021-03-01' = {
           enabled: aadProviderEnabled
           registration: {
             clientId: authClientId
-          }          
+          }
+             login: {
+               loginParameters: [
+                'response_type=code id_token'
+                'scope=openid offline_access profile https://graph.microsoft.com/User.Read'
+               ]
+             }    
         }
       }
     }
