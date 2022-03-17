@@ -88,16 +88,14 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-    - name: 'Set variables'
-      run: |
-        export appName=${{ github.event.inputs.appName }}        
-        export replyUrl="https://$appname.azurewebsites.net/.auth/login/aad/callback" 
-        export appId=(az ad app create --display-name $appName --reply-urls $replyUrl --query appId) 
-
     - name: 'Create Azure AD App Registration'
       uses: azure/cli@v1
       with:
-        inlineScript: |          
+        inlineScript: |    
+          export appName=${{ github.event.inputs.appName }}        
+          export replyUrl="https://$appname.azurewebsites.net/.auth/login/aad/callback" 
+          export appId=(az ad app create --display-name $appName --reply-urls $replyUrl --query appId)  
+          echo appId     
           az ad sp create --id $appId 
           az ad app permission add --id $appId --api 00000003-0000-0000-c000-000000000000 --api-permissions 311a71cc-e848-46a1-bdf8-97ff7156d8e6=Scope 
           az ad app permission grant --id $appId --api 00000003-0000-0000-c000-000000000000 
