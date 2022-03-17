@@ -9,7 +9,7 @@ on:
         required: true
       appName:
         description: 'Name of app'
-        type: environment
+        type: string
         required: true
   
 permissions:
