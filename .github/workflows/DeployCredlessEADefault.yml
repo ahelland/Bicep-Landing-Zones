@@ -90,9 +90,9 @@ jobs:
 
     - name: 'Set variables'
       run: |
-        export appName = ${{ github.event.inputs.appName }}        
-        export replyUrl = "https://$appname.azurewebsites.net/.auth/login/aad/callback" 
-        export appId = (az ad app create --display-name $appName --reply-urls $replyUrl --query appId) 
+        export appName=${{ github.event.inputs.appName }}        
+        export replyUrl="https://$appname.azurewebsites.net/.auth/login/aad/callback" 
+        export appId=(az ad app create --display-name $appName --reply-urls $replyUrl --query appId) 
 
     - name: 'Create Azure AD App Registration'
       uses: azure/cli@v1
