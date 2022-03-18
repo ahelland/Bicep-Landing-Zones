@@ -96,22 +96,14 @@ jobs:
         appId=$(az ad app create --display-name $appName --reply-urls $replyUrl --query appId) 
         echo "::set-output name=appId::$appId"
     
-    - name: 'Create SP'
+    - name: 'Create Service Principal'
       run: |
-        # echo "${{ steps.appreg.outputs.appId }}"
         az ad sp create --id ${{ steps.appreg.outputs.appId }}
 
-    #- name: 'Create Azure AD App Registration'
-    #  uses: azure/cli@v1
-    #  with:
-    #    inlineScript: |    
-    #      export appName=${{ github.event.inputs.appName }}        
-    #      export replyUrl="https://${{ github.event.inputs.appName }}.azurewebsites.net/.auth/login/aad/callback" 
-    #      appId=(az ad app create --display-name $appName --reply-urls $replyUrl --query appId) 
-    #      sleep 10 
-    #      az ad sp create --id $appId 
-          # az ad app permission add --id $appId --api 00000003-0000-0000-c000-000000000000 --api-permissions 311a71cc-e848-46a1-bdf8-97ff7156d8e6=Scope 
-          # az ad app permission grant --id $appId --api 00000003-0000-0000-c000-000000000000 
+    - name: 'Add Permissions'
+      run: |
+        az ad app permission add --id ${{ steps.appreg.outputs.appId }} --api 00000003-0000-0000-c000-000000000000 --api-permissions 311a71cc-e848-46a1-bdf8-97ff7156d8e6=Scope 
+        az ad app permission grant --id ${{ steps.appreg.outputs.appId }} --api 00000003-0000-0000-c000-000000000000 
   
     - name: 'Deploy Azure App Service'
       uses: azure/cli@v1      
@@ -120,4 +112,4 @@ jobs:
           az deployment sub create --location norwayeast \
             --name ${{ github.run_number }} \
             --template-file ./credless-in-azure-samples/part-2/easyauth-default/main.bicep \
-            --parameters ./credless-in-azure-samples/part-2/easyauth-default/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }}
+            --parameters ./credless-in-azure-samples/part-2/easyauth-default/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ steps.appreg.outputs.appId }}
