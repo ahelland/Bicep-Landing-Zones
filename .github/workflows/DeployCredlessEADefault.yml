@@ -95,7 +95,7 @@ jobs:
           export appName=${{ github.event.inputs.appName }}        
           export replyUrl="https://${{ github.event.inputs.appName }}.azurewebsites.net/.auth/login/aad/callback" 
           export appId=$(az ad app create --display-name $appName --reply-urls $replyUrl --query appId)  
-          az ad sp create --id $appId 
+          export sp=$(az ad sp create --id $appId) 
           # az ad app permission add --id $appId --api 00000003-0000-0000-c000-000000000000 --api-permissions 311a71cc-e848-46a1-bdf8-97ff7156d8e6=Scope 
           # az ad app permission grant --id $appId --api 00000003-0000-0000-c000-000000000000 
   
