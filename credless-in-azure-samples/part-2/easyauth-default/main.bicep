@@ -3,7 +3,7 @@ targetScope = 'subscription'
 param location string
 param env string
 param appName string
-param authClientId string
+param authClientId string = 'placeholder'
 @description('Tags retrieved from parameter file.')
 param resourceTags object = {}
 
