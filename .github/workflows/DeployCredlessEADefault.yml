@@ -98,7 +98,8 @@ jobs:
     
     - name: 'Create Service Principal'
       run: |
-        az ad sp create --id ${{ steps.appreg.outputs.appId }}
+        #az ad sp create --id ${{ steps.appreg.outputs.appId }}
+        az ad sp update --id ${{ steps.appreg.outputs.appId }}
 
     - name: 'Add Permissions'
       run: |
