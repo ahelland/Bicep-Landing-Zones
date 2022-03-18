@@ -112,4 +112,4 @@ jobs:
           az deployment sub create --location norwayeast \
             --name ${{ github.run_number }} \
             --template-file ./credless-in-azure-samples/part-2/easyauth-default/main.bicep \
-            --parameters ./credless-in-azure-samples/part-2/easyauth-default/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ steps.appreg.outputs.appId }}
+            --parameters ./credless-in-azure-samples/part-2/easyauth-default/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }}    
