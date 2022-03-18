@@ -88,7 +88,7 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-    - name: appreg
+    - name: Create Azure AD App Registration
       id: appreg
       run: |
         export appName=${{ github.event.inputs.appName }}     
@@ -96,9 +96,10 @@ jobs:
         appId=$(az ad app create --display-name $appName --reply-urls $replyUrl --query appId) 
         echo "::set-output name=appId::$appId"
     
-    - name: Test
+    - name: 'Create SP'
       run: |
-        echo "${{ steps.appreg.outputs.appId }}"
+        # echo "${{ steps.appreg.outputs.appId }}"
+        az ad sp create --id ${{ steps.appreg.outputs.appId }}
 
     #- name: 'Create Azure AD App Registration'
     #  uses: azure/cli@v1
