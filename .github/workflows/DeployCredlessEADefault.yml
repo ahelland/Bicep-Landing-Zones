@@ -88,15 +88,27 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-    - name: 'Create Azure AD App Registration'
-      uses: azure/cli@v1
-      with:
-        inlineScript: |    
-          export appName=${{ github.event.inputs.appName }}        
-          export replyUrl="https://${{ github.event.inputs.appName }}.azurewebsites.net/.auth/login/aad/callback" 
-          appId=(az ad app create --display-name $appName --reply-urls $replyUrl --query appId) 
-          sleep 10 
-          az ad sp create --id $appId 
+    - name: 'appreg'
+      id: appreg
+      run: |
+        export appName=${{ github.event.inputs.appName }}     
+        export replyUrl="https://${{ github.event.inputs.appName }}.azurewebsites.net/.auth/login/aad/callback" 
+        appId=$(az ad app create --display-name $appName --reply-urls $replyUrl --query appId) 
+        echo "::set-output name=appId::$appId"
+    
+    - name: Test
+        run: |
+          echo "${{ steps.appreg.outputs.appId }}"
+
+    #- name: 'Create Azure AD App Registration'
+    #  uses: azure/cli@v1
+    #  with:
+    #    inlineScript: |    
+    #      export appName=${{ github.event.inputs.appName }}        
+    #      export replyUrl="https://${{ github.event.inputs.appName }}.azurewebsites.net/.auth/login/aad/callback" 
+    #      appId=(az ad app create --display-name $appName --reply-urls $replyUrl --query appId) 
+    #      sleep 10 
+    #      az ad sp create --id $appId 
           # az ad app permission add --id $appId --api 00000003-0000-0000-c000-000000000000 --api-permissions 311a71cc-e848-46a1-bdf8-97ff7156d8e6=Scope 
           # az ad app permission grant --id $appId --api 00000003-0000-0000-c000-000000000000 
   
