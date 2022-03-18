@@ -51,7 +51,7 @@ module appService '../../../modules/azure-app-service/app-service.bicep' = {
     dockerRegistryStartupCommand: dockerRegistryStartupCommand
     dockerRegistryUrl: dockerRegistryUrl
     dockerRegistryUsername: dockerRegistryUsername
-    appServicePlanName: appName
+    appServicePlanName: 'plan-${env}-${appName}'
     linuxFxVersion: linuxFxVersion
     authClientId: authClientId
     aadProviderEnabled: aadProviderEnabled
