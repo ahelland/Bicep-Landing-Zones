@@ -107,10 +107,17 @@ jobs:
         az ad app permission grant --id ${{ steps.appreg.outputs.appId }} --api 00000003-0000-0000-c000-000000000000 
   
     - name: 'Deploy Azure App Service'
+      id: deploy
       uses: azure/cli@v1      
       with:
         inlineScript: |
-          az deployment sub create --location norwayeast \
+          bicepOutput=$(az deployment sub create --location norwayeast \
             --name ${{ github.run_number }} \
             --template-file ./credless-in-azure-samples/part-2/easyauth-default/main.bicep \
-            --parameters ./credless-in-azure-samples/part-2/easyauth-default/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }} authClientId=${{ steps.appreg.outputs.appId }}
+            --parameters ./credless-in-azure-samples/part-2/easyauth-default/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }} authClientId=${{ steps.appreg.outputs.appId }})
+          echo "::set-output name=appId::$bicepOutput"
+
+    - name: 'Update App Registration'
+      run: |
+        export updatedReplyUrl = jq '.properties.parameters.suffix.value' ${{ steps.deploy.outputs.bicepOutput }}
+        az ad app update --id ${{ steps.appreg.outputs.appId }} --reply-urls {$updatedReplyUrl}
