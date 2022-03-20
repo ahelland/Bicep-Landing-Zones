@@ -106,16 +106,24 @@ jobs:
         az ad app permission add --id ${{ steps.appreg.outputs.appId }} --api 00000003-0000-0000-c000-000000000000 --api-permissions 311a71cc-e848-46a1-bdf8-97ff7156d8e6=Scope 
         az ad app permission grant --id ${{ steps.appreg.outputs.appId }} --api 00000003-0000-0000-c000-000000000000 
   
+    #- name: 'Deploy Azure App Service'
+    #  id: deploy
+    #  uses: azure/cli@v1      
+    #  with:
+    #    inlineScript: |
+    #      bicepOutput=$(az deployment sub create --location norwayeast \
+    #        --name ${{ github.run_number }} \
+    #        --template-file ./credless-in-azure-samples/part-2/easyauth-default/main.bicep \
+    #        --parameters ./credless-in-azure-samples/part-2/easyauth-default/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }} authClientId=${{ steps.appreg.outputs.appId }})
+    #      echo "::set-output name=bicepOutput::$bicepOutput"
     - name: 'Deploy Azure App Service'
       id: deploy
-      uses: azure/cli@v1      
-      with:
-        inlineScript: |
-          bicepOutput=$(az deployment sub create --location norwayeast \
-            --name ${{ github.run_number }} \
-            --template-file ./credless-in-azure-samples/part-2/easyauth-default/main.bicep \
-            --parameters ./credless-in-azure-samples/part-2/easyauth-default/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }} authClientId=${{ steps.appreg.outputs.appId }})
-          echo "::set-output name=bicepOutput::$bicepOutput"
+      run: |
+        bicepOutput=$(az deployment sub create --location norwayeast \
+          --name ${{ github.run_number }} \
+          --template-file ./credless-in-azure-samples/part-2/easyauth-default/main.bicep \
+          --parameters ./credless-in-azure-samples/part-2/easyauth-default/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }} authClientId=${{ steps.appreg.outputs.appId }})
+        echo "::set-output name=bicepOutput::$bicepOutput"
 
     - name: 'Update App Registration'
       run: |
