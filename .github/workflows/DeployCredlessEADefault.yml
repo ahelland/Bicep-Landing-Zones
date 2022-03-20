@@ -119,5 +119,5 @@ jobs:
 
     - name: 'Update App Registration'
       run: |
-        export updatedReplyUrl = jq '.properties.parameters.suffix.value' ${{ steps.deploy.outputs.bicepOutput }}
+        export updatedReplyUrl=(${{ steps.deploy.outputs.bicepOutput }} | jq '.properties.parameters.suffix.value')
         az ad app update --id ${{ steps.appreg.outputs.appId }} --reply-urls {$updatedReplyUrl}
