@@ -115,7 +115,7 @@ jobs:
             --name ${{ github.run_number }} \
             --template-file ./credless-in-azure-samples/part-2/easyauth-default/main.bicep \
             --parameters ./credless-in-azure-samples/part-2/easyauth-default/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }} authClientId=${{ steps.appreg.outputs.appId }})
-          echo "::set-output name=appId::$bicepOutput"
+          echo "::set-output name=bicepOutput::$bicepOutput"
 
     - name: 'Update App Registration'
       run: |
