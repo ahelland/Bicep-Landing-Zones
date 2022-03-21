@@ -124,5 +124,6 @@ jobs:
 
     - name: 'Update App Registration'
       run: |
-        export updatedReplyUrl=(${{ steps.getOutputs.outputs.bicepOutput }} | jq '.properties.parameters.suffix.value')
-        az ad app update --id ${{ steps.appreg.outputs.appId }} --reply-urls {$updatedReplyUrl}
+        # export updatedReplyUrl=(${{ steps.getOutputs.outputs.bicepOutput }} | jq '.properties.parameters.suffix.value')
+        export suffix=$(${{ steps.getOutputs.outputs.bicepOutput }} | | ConvertFrom-Json | foreach properties | foreach parameters | select -ExpandProperty "suffix")
+        az ad app update --id ${{ steps.appreg.outputs.appId }} --reply-urls {$suffix.value}
