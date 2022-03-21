@@ -48,7 +48,7 @@ jobs:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           deploymentName: ${{ github.run_number }}         
           template: ./credless-in-azure-samples/part-2/easyauth-default/main.bicep
-          parameters: ./credless-in-azure-samples/part-2/easyauth-default/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }}
+          parameters: ./credless-in-azure-samples/part-2/easyauth-default/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} aadEndpoint='login.microsoftonline.com' authClientSecret='placeholder' 
           deploymentMode: Validate
 
   What-if:
