@@ -16,6 +16,7 @@ param tenantId string = tenant().tenantId
 param appServicePlanName string
 param easyauthEnabled bool
 param aadProviderEnabled bool
+param aadEndpoint string
 param authClientId string
 @secure()
 param authClientSecret string
@@ -83,7 +84,7 @@ resource appservice 'Microsoft.Web/sites@2021-03-01' = {
           enabled: aadProviderEnabled
           registration: {
             clientId: authClientId
-            openIdIssuer: 'https://login.microsoftonline.com/v2.0/${tenantId}/'
+            openIdIssuer: 'https://${aadEndpoint}/v2.0/${tenantId}/'
             clientSecretSettingName: 'MICROSOFT_PROVIDER_AUTHENTICATION_SECRET'
           }
           login: {

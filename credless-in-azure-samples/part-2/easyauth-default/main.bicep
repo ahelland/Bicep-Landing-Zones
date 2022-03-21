@@ -13,6 +13,7 @@ param suffix string = uniqueString(subscription().id)
 
 param easyauthEnabled bool
 param aadProviderEnabled bool
+param aadEndpoint string
 param alwaysOn bool
 param sku string
 param skuCode string
@@ -57,6 +58,7 @@ module appService '../../../modules/azure-app-service/app-service.bicep' = {
     linuxFxVersion: linuxFxVersion
     authClientId: authClientId
     authClientSecret: authClientSecret
+    aadEndpoint: aadEndpoint
     aadProviderEnabled: aadProviderEnabled
   }
   dependsOn:[
