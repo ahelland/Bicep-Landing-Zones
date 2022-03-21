@@ -119,7 +119,7 @@ jobs:
     - name: 'Retrieve Outputs'
       id: getOutputs
       run: |
-        bicepOutput=$(az deployment sub show -n ${{ github.run_number }} | ConvertFrom-Json | foreach properties | foreach parameters | select -ExpandProperty "suffix")
+        export bicepOutput=$(az deployment sub show -n ${{ github.run_number }} | ConvertFrom-Json | foreach properties | foreach parameters | select -ExpandProperty 'suffix')
         echo "::set-output name=bicepOutput::$bicepOutput"
 
     - name: 'Update App Registration'
