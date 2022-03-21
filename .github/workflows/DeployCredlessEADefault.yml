@@ -116,7 +116,7 @@ jobs:
             --template-file ./credless-in-azure-samples/part-2/easyauth-default/main.bicep \
             --parameters ./credless-in-azure-samples/part-2/easyauth-default/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }} authClientId=${{ steps.appreg.outputs.appId }}
     
-    - name: 'Retrieve outputs'
+    - name: 'Retrieve Outputs'
       id: getOutputs
       run: |
         bicepOutput=$(az deployment sub show -n ${{ github.run_number }})
@@ -125,5 +125,5 @@ jobs:
     - name: 'Update App Registration'
       run: |
         # export updatedReplyUrl=(${{ steps.getOutputs.outputs.bicepOutput }} | jq '.properties.parameters.suffix.value')
-        export suffix=$(${{ steps.getOutputs.outputs.bicepOutput }} | | ConvertFrom-Json | foreach properties | foreach parameters | select -ExpandProperty "suffix")
+        export suffix=$(${{ steps.getOutputs.outputs.bicepOutput }} | ConvertFrom-Json | foreach properties | foreach parameters | select -ExpandProperty "suffix")
         az ad app update --id ${{ steps.appreg.outputs.appId }} --reply-urls {$suffix.value}
