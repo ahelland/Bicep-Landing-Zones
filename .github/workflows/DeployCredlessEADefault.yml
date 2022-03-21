@@ -96,6 +96,16 @@ jobs:
         appId=$(az ad app create --display-name $appName --reply-urls $replyUrl --query appId) 
         echo "::set-output name=appId::$appId"
     
+    - name: 'Generate ClientSecret'
+      id: genClientSecret
+      uses: azure/powershell@v1
+      with:
+        inlineScript: |
+          # Warning - not proper handling of secret
+          $clientSecret=(az ad app credential reset --credential-description appSecret --id $appId --query password)
+          echo "::set-output name=clientSecret::$clientSecret"
+        azPSVersion: "latest"
+
     - name: 'Create Service Principal'
       continue-on-error: true
       run: |
@@ -114,7 +124,7 @@ jobs:
           az deployment sub create --location norwayeast \
             --name ${{ github.run_number }} \
             --template-file ./credless-in-azure-samples/part-2/easyauth-default/main.bicep \
-            --parameters ./credless-in-azure-samples/part-2/easyauth-default/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }} authClientId=${{ steps.appreg.outputs.appId }}
+            --parameters ./credless-in-azure-samples/part-2/easyauth-default/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }} authClientId=${{ steps.appreg.outputs.appId }} authClientSecret=${{ steps.genClientSecret.outputs.clientSecret }} 
     
     - name: 'Retrieve Outputs'
       id: getOutputs
