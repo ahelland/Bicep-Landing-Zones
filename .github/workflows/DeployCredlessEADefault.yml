@@ -72,7 +72,7 @@ jobs:
             az deployment sub what-if --location norwayeast \
               --name ${{ github.run_number }} \
               --template-file ./credless-in-azure-samples/part-2/easyauth-default/main.bicep \
-              --parameters ./credless-in-azure-samples/part-2/easyauth-default/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }}
+              --parameters ./credless-in-azure-samples/part-2/easyauth-default/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} aadEndpoint='login.microsoftonline.com' authClientSecret='placeholder' 
 
   Deploy:
     runs-on: ubuntu-latest
