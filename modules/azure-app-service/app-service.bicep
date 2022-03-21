@@ -12,10 +12,13 @@ param dockerRegistryStartupCommand string
 param alwaysOn bool
 param serverFarmResourceGroup string = resourceGroup().name
 param subscriptionId string = subscription().id
+param tenantId string = tenant().tenantId
 param appServicePlanName string
 param easyauthEnabled bool
 param aadProviderEnabled bool
 param authClientId string
+@secure()
+param authClientSecret string
 
 resource appservice 'Microsoft.Web/sites@2021-03-01' = {
   name: name
@@ -39,6 +42,10 @@ resource appservice 'Microsoft.Web/sites@2021-03-01' = {
         {
           name: 'WEBSITES_ENABLE_APP_SERVICE_STORAGE'
           value: 'false'
+        }
+        {
+          name: 'MICROSOFT_PROVIDER_AUTHENTICATION_SECRET'
+          value: authClientSecret
         }
       ]
       linuxFxVersion: linuxFxVersion
@@ -76,13 +83,15 @@ resource appservice 'Microsoft.Web/sites@2021-03-01' = {
           enabled: aadProviderEnabled
           registration: {
             clientId: authClientId
+            openIdIssuer: 'https://login.microsoftonline.com/v2.0/${tenantId}/'
+            clientSecretSettingName: 'MICROSOFT_PROVIDER_AUTHENTICATION_SECRET'
           }
-             login: {
-               loginParameters: [
-                'response_type=code id_token'
-                'scope=openid offline_access profile https://graph.microsoft.com/User.Read'
-               ]
-             }    
+          login: {
+            loginParameters: [
+            'response_type=code id_token'
+            'scope=openid offline_access profile https://graph.microsoft.com/User.Read'
+            ]
+          }   
         }
       }
     }

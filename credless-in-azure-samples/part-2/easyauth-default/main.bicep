@@ -4,6 +4,8 @@ param location string
 param env string
 param appName string
 param authClientId string = 'placeholder'
+@secure()
+param authClientSecret string
 @description('Tags retrieved from parameter file.')
 param resourceTags object = {}
 
@@ -54,6 +56,7 @@ module appService '../../../modules/azure-app-service/app-service.bicep' = {
     appServicePlanName: 'plan-${env}-${appName}'
     linuxFxVersion: linuxFxVersion
     authClientId: authClientId
+    authClientSecret: authClientSecret
     aadProviderEnabled: aadProviderEnabled
   }
   dependsOn:[
