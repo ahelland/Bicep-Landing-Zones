@@ -129,5 +129,5 @@ jobs:
       run: |
         # export updatedReplyUrl=(${{ steps.getOutputs.outputs.bicepOutput }} | jq '.properties.parameters.suffix.value')
         # export suffix=$(${{ steps.getOutputs.outputs.bicepOutput }} | ConvertFrom-Json | foreach properties | foreach parameters | select -ExpandProperty "suffix")
-        export suffix=${{ steps.getOutputs.outputs.bicepOutput }}
+        export suffix=${{ steps.getOutputs.outputs.bicepOutput.value }}
         az ad app update --id ${{ steps.appreg.outputs.appId }} --reply-urls "https://${{ github.event.inputs.appName }}-$suffix.azurewebsites.net/.auth/login/aad/callback"  
