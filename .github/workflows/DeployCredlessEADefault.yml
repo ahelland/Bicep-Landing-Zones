@@ -123,6 +123,7 @@ jobs:
         inlineScript: |
           export bicepOutput=$(az deployment sub show -n ${{ github.run_number }} | ConvertFrom-Json | foreach properties | foreach parameters | select -ExpandProperty 'suffix')
           echo "::set-output name=bicepOutput::$bicepOutput"
+        azPSVersion: "latest"
 
     - name: 'Update App Registration'
       run: |
