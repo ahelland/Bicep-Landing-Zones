@@ -102,7 +102,7 @@ jobs:
       with:
         inlineScript: |
           # Warning - not proper handling of secret
-          $clientSecret=(az ad app credential reset --credential-description appSecret --id $appId --query password)
+          $clientSecret=(az ad app credential reset --credential-description appSecret --id ${{ steps.appreg.outputs.appId }} --query password)
           echo "::set-output name=clientSecret::$clientSecret"
         azPSVersion: "latest"
 
