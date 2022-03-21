@@ -119,11 +119,12 @@ jobs:
     - name: 'Retrieve Outputs'
       id: getOutputs
       run: |
-        bicepOutput=$(az deployment sub show -n ${{ github.run_number }})
+        bicepOutput=$(az deployment sub show -n ${{ github.run_number }} | ConvertFrom-Json | foreach properties | foreach parameters | select -ExpandProperty "suffix")
         echo "::set-output name=bicepOutput::$bicepOutput"
 
     - name: 'Update App Registration'
       run: |
         # export updatedReplyUrl=(${{ steps.getOutputs.outputs.bicepOutput }} | jq '.properties.parameters.suffix.value')
-        export suffix=$(${{ steps.getOutputs.outputs.bicepOutput }} | ConvertFrom-Json | foreach properties | foreach parameters | select -ExpandProperty "suffix")
+        # export suffix=$(${{ steps.getOutputs.outputs.bicepOutput }} | ConvertFrom-Json | foreach properties | foreach parameters | select -ExpandProperty "suffix")
+        export suffix=${{ steps.getOutputs.outputs.bicepOutput }}
         az ad app update --id ${{ steps.appreg.outputs.appId }} --reply-urls {$suffix.value}
