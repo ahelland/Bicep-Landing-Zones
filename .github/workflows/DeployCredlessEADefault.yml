@@ -72,7 +72,7 @@ jobs:
             az deployment sub what-if --location norwayeast \
               --name ${{ github.run_number }} \
               --template-file ./credless-in-azure-samples/part-2/easyauth-default/main.bicep \
-              --parameters ./credless-in-azure-samples/part-2/easyauth-default/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} aadEndpoint='sts.windows.net' authClientSecret='placeholder' 
+              --parameters ./credless-in-azure-samples/part-2/easyauth-default/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} aadEndpoint='login.microsoftonline.com' authClientSecret='placeholder' 
 
   Deploy:
     runs-on: ubuntu-latest
@@ -139,4 +139,4 @@ jobs:
     - name: 'Update App Registration'
       run: |
         export suffix=${{ steps.getOutputs.outputs.bicepOutput }}
-        az ad app update --id ${{ steps.appreg.outputs.appId }} --reply-urls "https://app-${{ github.event.inputs.environment }}-${{ github.event.inputs.appName }}-$suffix.azurewebsites.net/.auth/login/aad/callback"  
+        az ad app update --id ${{ steps.appreg.outputs.appId }} --homepage "https://app-${{ github.event.inputs.environment }}-${{ github.event.inputs.appName }}-$suffix.azurewebsites.net"  --reply-urls "https://app-${{ github.event.inputs.environment }}-${{ github.event.inputs.appName }}-$suffix.azurewebsites.net/.auth/login/aad/callback"  
