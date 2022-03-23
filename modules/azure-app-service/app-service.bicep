@@ -84,7 +84,7 @@ resource appservice 'Microsoft.Web/sites@2021-03-01' = {
           enabled: aadProviderEnabled
           registration: {
             clientId: authClientId
-            openIdIssuer: 'https://${aadEndpoint}/${tenantId}v2.0/'
+            openIdIssuer: 'https://${aadEndpoint}/${tenantId}/v2.0/'
             clientSecretSettingName: 'MICROSOFT_PROVIDER_AUTHENTICATION_SECRET'
           }
           login: {
