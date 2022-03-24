@@ -1,0 +1,48 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "resourceTags": {
+            "value": {
+                "IaC": "Bicep",
+                "Source": "GitHub" 
+            }
+        },
+        "location": {
+            "value": "northeurope"
+        },
+        "appName":{
+            "value": "placeholder"
+        },
+        "alwaysOn": {
+            "value": true
+        },
+        "easyauthEnabled": {
+            "value": true
+        },
+        "aadProviderEnabled":{
+            "value": true
+        },
+        "sku": {
+            "value": "Basic"
+        },
+        "skuCode": {
+            "value": "B1"
+        },
+        "linuxFxVersion": {
+            "value": "DOCKER|ghcr.io/ahelland/blazor-easyauth-graph:master"
+        },
+        "dockerRegistryUrl": {
+            "value": "https://ghcr.io"
+        },
+        "dockerRegistryUsername": {
+            "value": ""
+        },
+        "dockerRegistryPassword": {
+            "value": ""
+        },
+        "dockerRegistryStartupCommand": {
+            "value": "dotnet blazor-easyauth-graph-dotnet6.dll"
+        }
+    }
+}
