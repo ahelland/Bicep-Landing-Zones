@@ -1,0 +1,16 @@
+# Configure a globally unique appName
+$appName = 'foo2f5476i'
+# Change location if you like
+$location = 'norwayeast'
+# WebApps require a replyUrl - this is a known suffix for EasyAuth
+$replyUrl = "https://$appname.azurewebsites.net/.auth/login/aad/callback"
+# Create an app registration
+$appId = (az ad app create --display-name $appName --reply-urls $replyUrl --query appId)
+# Create a service principal for the app registration
+az ad sp create --id $appId
+# Add permission for User.Read on MS Graph (static guids)
+az ad app permission add --id $appId --api 00000003-0000-0000-c000-000000000000 --api-permissions 311a71cc-e848-46a1-bdf8-97ff7156d8e6=Scope
+# Grant the permission added above
+az ad app permission grant --id $appId --api 00000003-0000-0000-c000-000000000000
+# Deploy the Bicep template
+az deployment sub create -l $location  --name ExampleDeployment --template-file main.bicep --parameters azuredeploy.Dev.parameters.json env=Dev authClientId=$appId appName=$appName 
