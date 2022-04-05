@@ -42,8 +42,8 @@ jobs:
       uses: azure/powershell@v1
       with:
         inlineScript: |
-          az group create --name "rg-${{ github.event.inputs.environment }}-kv-${{ github.event.inputs.appName }} --location ${{ github.event.inputs.location }}
-          az keyvault create --name "kv-${{ github.event.inputs.appName }} --resource-group "rg-${{ github.event.inputs.environment }}-kv-${{ github.event.inputs.appName }} --location ${{ github.event.inputs.location }} --enabled-for-template-deployment true  
+          az group create --name "rg-${{ github.event.inputs.environment }}-kv-${{ github.event.inputs.appName }}" --location ${{ github.event.inputs.location }}
+          az keyvault create --name "kv-${{ github.event.inputs.appName }}" --resource-group "rg-${{ github.event.inputs.environment }}-kv-${{ github.event.inputs.appName }}" --location ${{ github.event.inputs.location }} --enabled-for-template-deployment true  
         azPSVersion: "latest"
     
     - name: Create Azure AD App Registration
