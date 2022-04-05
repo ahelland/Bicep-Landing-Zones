@@ -1,0 +1,62 @@
+name: Create Key Vault and AAD app registration (with secret in KV)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment for deployment'
+        type: environment
+        required: true
+      appName:
+        description: 'Name of app'
+        type: string
+        required: true
+      location:
+        description: 'Region for deployment'
+        type: choice
+        default: 'norwayeast'
+        required: true
+        options:
+        - norwayeast
+        - northeurope
+        - eastus
+
+permissions:
+      id-token: write
+      contents: read
+      
+jobs: 
+  Deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }} 
+    steps:
+
+    - name: 'Az CLI login'
+      uses: azure/login@v1
+      with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    - name: 'Create keyvault'
+      uses: azure/powershell@v1
+      with:
+        inlineScript: |
+          az group create --name "rg-${{ github.event.inputs.environment }}-kv-${{ github.event.inputs.appName }} --location ${{ github.event.inputs.location }}
+          az keyvault create --name "kv-${{ github.event.inputs.appName }} --resource-group "rg-${{ github.event.inputs.environment }}-kv-${{ github.event.inputs.appName }} --location ${{ github.event.inputs.location }} --enabled-for-template-deployment true  
+        azPSVersion: "latest"
+    
+    - name: Create Azure AD App Registration
+      id: appreg
+      run: |
+        export appName=${{ github.event.inputs.appName }}     
+        appId=$(az ad app create --display-name $appName --query appId) 
+        echo "::set-output name=appId::$appId"
+    
+    - name: 'Generate ClientSecret & Store in Key Vault'
+      id: genClientSecret
+      uses: azure/powershell@v1
+      with:
+        inlineScript: |
+          ($clientSecret = az ad app credential reset --credential-description appSecret --id ${{ steps.appreg.outputs.appId }} --query password) | az keyvault secret set --vault-name "kv-${{ github.event.inputs.appName }} --name clientSecret --value $clientSecret --output none
+        azPSVersion: "latest"
