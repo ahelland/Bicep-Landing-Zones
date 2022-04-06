@@ -20,6 +20,7 @@ param skuCode string
 param linuxFxVersion string
 param dockerRegistryUrl string
 param dockerRegistryUsername string
+param managedIdentity string = 'none'
 
 @secure()
 param dockerRegistryPassword string
@@ -60,6 +61,7 @@ module appService '../../../modules/azure-app-service/app-service.bicep' = {
     authClientSecret: authClientSecret
     aadEndpoint: aadEndpoint
     aadProviderEnabled: aadProviderEnabled
+    managedIdentity: managedIdentity
   }
   dependsOn:[
     appServicePlan
