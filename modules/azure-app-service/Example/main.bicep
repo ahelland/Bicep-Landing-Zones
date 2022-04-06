@@ -4,6 +4,9 @@ param location string
 param env string
 param appName string
 param authClientId string = 'placeholder'
+param authClientSecret string = 'placeholder'
+param aadEndpoint string
+param managedIdentity string = 'None'
 @description('Tags retrieved from parameter file.')
 param resourceTags object = {}
 
@@ -52,7 +55,10 @@ module appService '../app-service.bicep' = {
     appServicePlanName: appName
     linuxFxVersion: linuxFxVersion
     authClientId: authClientId
+    authClientSecret: authClientSecret
     aadProviderEnabled: aadProviderEnabled
+    aadEndpoint: aadEndpoint
+    managedIdentity: managedIdentity
   }
   dependsOn:[
     appServicePlan

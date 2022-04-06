@@ -23,6 +23,9 @@
         "aadProviderEnabled":{
             "value": true
         },
+        "aadEndpoint" :{
+            "value": "login.microsoftonline.com"
+        },
         "sku": {
             "value": "Basic"
         },

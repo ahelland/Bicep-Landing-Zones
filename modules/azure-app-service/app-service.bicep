@@ -18,6 +18,7 @@ param easyauthEnabled bool
 param aadProviderEnabled bool
 param aadEndpoint string
 param authClientId string
+param managedIdentity string
 @secure()
 param authClientSecret string
 
@@ -57,6 +58,9 @@ resource appservice 'Microsoft.Web/sites@2021-03-01' = {
     serverFarmId: '/subscriptions/${subscriptionId}/resourcegroups/${serverFarmResourceGroup}/providers/Microsoft.Web/serverfarms/${appServicePlanName}'
     clientAffinityEnabled: false
     httpsOnly: true    
+  }
+  identity: {
+    type: managedIdentity
   }
   dependsOn: []
   
