@@ -111,4 +111,4 @@ jobs:
     
     # az bicep publish is not supported on GitHub runners yet
     - name: 'Publish AKS Module'
-      run: bicep publish ./modules/azure-key-vault/aks.bicep --target br:${{ secrets.BICEP_MODULE_REGISTRY }}.azurecr.io/bicep/modules/akv:0.1 \
+      run: bicep publish ./modules/azure-key-vault/key-vault.bicep --target br:${{ secrets.BICEP_MODULE_REGISTRY }}.azurecr.io/bicep/modules/akv:0.1 \
