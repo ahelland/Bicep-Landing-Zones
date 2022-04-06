@@ -110,5 +110,5 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     
     # az bicep publish is not supported on GitHub runners yet
-    - name: 'Publish AKS Module'
+    - name: 'Publish AKV Module'
       run: bicep publish ./modules/azure-key-vault/key-vault.bicep --target br:${{ secrets.BICEP_MODULE_REGISTRY }}.azurecr.io/bicep/modules/akv:0.1 \
