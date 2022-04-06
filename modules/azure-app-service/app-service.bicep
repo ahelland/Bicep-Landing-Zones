@@ -103,3 +103,4 @@ resource appservice 'Microsoft.Web/sites@2021-03-01' = {
   }
 }
 
+output managedIdentityPrincipal string = appservice.identity.principalId
