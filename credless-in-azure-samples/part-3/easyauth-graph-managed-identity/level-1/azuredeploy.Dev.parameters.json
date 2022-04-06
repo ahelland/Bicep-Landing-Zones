@@ -1,0 +1,24 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "resourceTags": {
+            "value": {
+                "IaC": "Bicep",
+                "Source": "GitHub" 
+            }
+        },
+        "location": {
+            "value": "northeurope"
+        },
+        "appName":{
+            "value": "placeholder"
+        },
+        "sku": {
+            "value": "standard"
+        },
+        "skuCode": {
+            "value": "A"
+        }
+    }
+}
