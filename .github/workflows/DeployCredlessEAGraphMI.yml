@@ -144,7 +144,7 @@ jobs:
       uses: azure/powershell@v1
       with:
         inlineScript: |
-          ($clientSecret = az ad app credential reset --credential-description authClientSecret --id ${{ steps.appreg.outputs.appId }} --query password) | az keyvault secret set --vault-name "kv-${{ github.event.inputs.environment }}-${{ steps.getKVOutputs.outputs.level1BicepOutput }}" --name authClientSecret --value $clientSecret --output none
+          ($clientSecret = az ad app credential reset --credential-description appSecret --id ${{ steps.appreg.outputs.appId }} --query password) | az keyvault secret set --vault-name "kv-${{ github.event.inputs.environment }}-${{ steps.getKVOutputs.outputs.level1BicepOutput }}" --name authClientSecret --value $clientSecret --output none
         azPSVersion: "latest"
 
     - name: 'Create Service Principal'
