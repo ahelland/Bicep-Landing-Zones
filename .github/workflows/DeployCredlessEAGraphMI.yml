@@ -1,0 +1,184 @@
+name: Deploy EasyAuth Graph Managed Identity sample
+#on: [push]
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment for deployment'
+        type: environment
+        required: true
+      appName:
+        description: 'Name of app'
+        type: string
+        required: true
+  
+permissions:
+      id-token: write
+      contents: read
+
+jobs: 
+  lint:
+    name: Lint code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Lint code level 1
+        run: |
+          az bicep build --file ./credless-in-azure-samples/part-3/easyauth-graph-managed-identity/level-1/main.bicep        
+
+      - name: Lint code level 2
+        run: |
+          az bicep build --file ./credless-in-azure-samples/part-3/easyauth-graph-managed-identity/level-2/main.bicep
+
+  Validate:
+    runs-on: ubuntu-latest
+    needs: lint
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: 'Az CLI login'
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: 'Run preflight validation - Level 1'
+        uses: azure/arm-deploy@v1
+        with: 
+          scope: subscription
+          region: norwayeast
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          deploymentName: ${{ github.run_number }}         
+          template: ./credless-in-azure-samples/part-3/easyauth-graph-managed-identity/level-1/main.bicep 
+          parameters: ./credless-in-azure-samples/part-3/easyauth-graph-managed-identity/level-1/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }}
+          deploymentMode: Validate
+      
+      - name: 'Run preflight validation - Level 2'
+        uses: azure/arm-deploy@v1
+        with: 
+          scope: subscription
+          region: norwayeast
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          deploymentName: ${{ github.run_number }}         
+          template: ./credless-in-azure-samples/part-3/easyauth-graph-managed-identity/level-2/main.bicep 
+          parameters: ./credless-in-azure-samples/part-3/easyauth-graph-managed-identity/level-2/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} aadEndpoint='login.microsoftonline.com'
+          deploymentMode: Validate
+
+  What-if:
+    runs-on: ubuntu-latest
+    needs: Validate
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: 'Az CLI login'
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: 'Run what-if - Level 1'
+        uses: azure/cli@v1      
+        with: 
+          inlineScript: |
+            az deployment sub what-if --location norwayeast \
+              --name ${{ github.run_number }} \
+              --template-file ./credless-in-azure-samples/part-3/easyauth-graph-managed-identity/level-1/main.bicep  \
+              --parameters ./credless-in-azure-samples/part-3/easyauth-graph-managed-identity/level-1/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} 
+
+      - name: 'Run what-if - Level 2'
+        uses: azure/cli@v1      
+        with: 
+          inlineScript: |
+            az deployment sub what-if --location norwayeast \
+              --name ${{ github.run_number }} \
+              --template-file ./credless-in-azure-samples/part-3/easyauth-graph-managed-identity/level-2/main.bicep  \
+              --parameters ./credless-in-azure-samples/part-3/easyauth-graph-managed-identity/level-2/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} aadEndpoint='login.microsoftonline.com'
+
+  Deploy:
+    runs-on: ubuntu-latest
+    needs: What-if
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: 'Az CLI login'
+      uses: azure/login@v1
+      with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Create Azure AD App Registration
+      id: appreg
+      run: |
+        export appName=${{ github.event.inputs.appName }}             
+        appId=$(az ad app create --display-name $appName --query appId) 
+        echo "::set-output name=appId::$appId"
+
+    - name: Deploy Azure Key Vault
+      id: deployKeyVault      
+      uses: azure/cli@v1      
+      with:
+        inlineScript: |
+          az deployment sub create --location norwayeast \
+            --name ${{ github.run_number }} \
+            --template-file ./credless-in-azure-samples/part-3/easyauth-graph-managed-identity/level-1/main.bicep \
+            --parameters ./credless-in-azure-samples/part-3/easyauth-graph-managed-identity/level-1/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }}
+
+    - name: 'Retrieve Key Vault suffix'
+      id: getKVOutputs
+      uses: azure/powershell@v1
+      with:
+        inlineScript: |
+          $level1BicepOutput=(az deployment sub show -n ${{ github.run_number }} | ConvertFrom-Json | foreach properties | foreach parameters | select -ExpandProperty 'suffix')
+          $level1BicepOutput=$level1BicepOutput.value
+          echo "::set-output name=level1BicepOutput::$level1BicepOutput"
+        azPSVersion: "latest"
+
+    - name: 'Generate ClientSecret & Store in Key Vault'
+      id: genClientSecret
+      uses: azure/powershell@v1
+      with:
+        inlineScript: |
+          ($clientSecret = az ad app credential reset --credential-description authClientSecret --id ${{ steps.appreg.outputs.appId }} --query password) | az keyvault secret set --vault-name "kv-${{ github.event.inputs.environment }}-${{ steps.getKVOutputs.outputs.level1BicepOutput }}" --name authClientSecret --value $clientSecret --output none
+        azPSVersion: "latest"
+
+    - name: 'Create Service Principal'
+      continue-on-error: true
+      run: |
+        az ad sp create --id ${{ steps.appreg.outputs.appId }}        
+
+    - name: 'Add Permissions'      
+      run: |
+        az ad app permission add --id ${{ steps.appreg.outputs.appId }} --api 00000003-0000-0000-c000-000000000000 --api-permissions 311a71cc-e848-46a1-bdf8-97ff7156d8e6=Scope 
+        az ad app permission grant --id ${{ steps.appreg.outputs.appId }} --api 00000003-0000-0000-c000-000000000000 
+
+    - name: 'Deploy Azure App Service'
+      id: deploy
+      uses: azure/cli@v1      
+      with:
+        inlineScript: |
+          az deployment sub create --location norwayeast \
+            --name ${{ github.run_number }} \
+            --template-file ./credless-in-azure-samples/part-3/easyauth-graph-managed-identity/level-2/main.bicep \
+            --parameters ./credless-in-azure-samples/part-3/easyauth-graph-managed-identity/level-2/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} aadEndpoint='login.microsoftonline.com' appName=${{ github.event.inputs.appName }} authClientId=${{ steps.appreg.outputs.appId }} keyVaultName="kv-${{ github.event.inputs.environment }}-${{ steps.getKVOutputs.outputs.level1BicepOutput }}"
+    
+    - name: 'Retrieve Outputs'
+      id: getAppOutputs
+      uses: azure/powershell@v1
+      with:
+        inlineScript: |
+          $level2BicepOutput=(az deployment sub show -n ${{ github.run_number }} | ConvertFrom-Json | foreach properties | foreach parameters | select -ExpandProperty 'suffix')
+          $level2BicepOutput=$level2BicepOutput.value
+          echo "::set-output name=level2BicepOutput::$level2BicepOutput"
+        azPSVersion: "latest"
+
+    - name: 'Update App Registration'
+      run: |
+        export appSuffix=${{ steps.getAppOutputs.outputs.level2BicepOutput }}
+        az ad app update --id ${{ steps.appreg.outputs.appId }} --homepage "https://app-${{ github.event.inputs.environment }}-${{ github.event.inputs.appName }}-$suffix.azurewebsites.net"  --reply-urls "https://app-${{ github.event.inputs.environment }}-${{ github.event.inputs.appName }}-$appSuffix.azurewebsites.net/.auth/login/aad/callback"  
+  
