@@ -167,7 +167,7 @@ jobs:
             --template-file ./credless-in-azure-samples/part-3/easyauth-graph-managed-identity/level-2/main.bicep \
             --parameters ./credless-in-azure-samples/part-3/easyauth-graph-managed-identity/level-2/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} aadEndpoint='login.microsoftonline.com' appName=${{ github.event.inputs.appName }} authClientId=${{ steps.appreg.outputs.appId }} keyVaultName="kv-${{ github.event.inputs.environment }}-${{ steps.getKVOutputs.outputs.level1BicepOutput }}"
     
-    - name: 'Retrieve Outputs'
+    - name: 'Retrieve App Service Outputs'
       id: getAppOutputs
       uses: azure/powershell@v1
       with:
