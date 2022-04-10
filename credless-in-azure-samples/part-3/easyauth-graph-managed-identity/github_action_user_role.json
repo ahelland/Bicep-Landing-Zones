@@ -1,0 +1,17 @@
+{
+  "Name": "GitHub Action User",
+  "IsCustom": true,
+  "Description": "Grants permissions needed for CI/CD tasks.",
+  "Actions": [
+    "Microsoft.Authorization/roleAssignments/Delete",
+    "Microsoft.Authorization/roleAssignments/Write"
+  ],
+  "NotActions": [],
+  "DataActions": [
+    "Microsoft.KeyVault/vaults/secrets/setSecret/action"
+  ],
+  "NotDataActions": [],
+  "AssignableScopes": [
+    "/subscriptions/YOUR_SUBSCRIPTION_ID"
+  ]
+}
