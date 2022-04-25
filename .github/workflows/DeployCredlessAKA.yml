@@ -99,7 +99,7 @@ jobs:
       uses: azure/cli@v1      
       with: 
         inlineScript: |
-          az deployment sub create --location norwayeast \
+          az deployment sub create--location norwayeast \
             --name ${{ github.run_number }} \
             --template-file ./credless-in-azure-samples/part-4/main.bicep  \
             --parameters ./credless-in-azure-samples/part-4/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} adminGroupId=${{ steps.groupcreate.outputs.adminGroupId }}
@@ -109,6 +109,11 @@ jobs:
       run: |
         oidcUrl=$(az aks show --resource-group rg-${{ github.event.inputs.environment }}-aks --name ${{ github.event.inputs.environment }}-aks --query "oidcIssuerProfile.issuerUrl" -o tsv)
         echo "::set-output name=oidcUrl::$oidcUrl"
+    
+    - name: Get AKS Creds
+      id: getakscreds
+      run: |
+        az aks get-credentials --resource-group rg-${{ github.event.inputs.environment }}-aks --name ${{ github.event.inputs.environment }}-aks
 
     - name: Run Helm
       id: helm
