@@ -43,7 +43,7 @@ jobs:
           region: norwayeast
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           deploymentName: ${{ github.run_number }}         
-          template: ./credless-in-azure-samples/part-/main.bicep 
+          template: ./credless-in-azure-samples/part-4/main.bicep 
           parameters: ./credless-in-azure-samples/part-4/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }}
           deploymentMode: Validate
   
