@@ -151,4 +151,4 @@ jobs:
       with:
         action: deploy
         manifests: |
-          ./credless-in-azure-samples/part-4/webhook.yaml
+          ./credless-in-azure-samples/part-4/azure-wi-webhook.yaml
