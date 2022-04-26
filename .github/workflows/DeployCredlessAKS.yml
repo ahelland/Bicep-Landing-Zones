@@ -104,6 +104,12 @@ jobs:
             --template-file ./credless-in-azure-samples/part-4/main.bicep  \
             --parameters ./credless-in-azure-samples/part-4/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} adminGroupId=${{ steps.groupcreate.outputs.adminGroupId }}
     
+    - name: Assign RBAC
+      id: rbac
+      run: |
+        aksId=$(az aks show -g rg-${{ github.event.inputs.environment }}-aks -n ${{ github.event.inputs.environment }}-aks --query id -o tsv)
+        az role assignment create --role "Azure Kubernetes Service RBAC Cluster Admin" --assignee ${{ secrets.AZURE_CLIENT_ID }} --scope $aksId
+    
     - name: Get OIDCUrl
       id: oidc
       run: |
