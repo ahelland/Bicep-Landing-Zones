@@ -162,9 +162,10 @@ jobs:
         AZURE_AUTHORITY_HOST: https://login.microsoftonline.com/
         AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
         AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}  
-        SERVICE_ACCOUNT_NAMESPACE: default
+        SERVICE_ACCOUNT_NAMESPACE: default        
         SERVICE_ACCOUNT_NAME: workload-identity-sa
       run: |
+        export SERVICE_ACCOUNT_NAMESPACE=default
         export AZURE_FEDERATED_TOKEN_FILE=${RUNNER_TEMP}/.token
         kubectl apply -f ./credless-in-azure-samples/part-4/service-account.yaml    
 
