@@ -116,20 +116,36 @@ jobs:
         oidcUrl=$(az aks show --resource-group rg-${{ github.event.inputs.environment }}-aks --name ${{ github.event.inputs.environment }}-aks --query "oidcIssuerProfile.issuerUrl" -o tsv)
         echo "::set-output name=oidcUrl::$oidcUrl"
     
-    #- name: Get AKS Creds
-    #  id: getakscreds
-    #  run: |
-    #    az aks get-credentials --resource-group rg-${{ github.event.inputs.environment }}-aks --name ${{ github.event.inputs.environment }}-aks
-
-    - name: install-cli
+    - name: Get AKS Creds
+      id: getakscreds
       run: |
-        az aks install-cli
+        az aks get-credentials --resource-group rg-${{ github.event.inputs.environment }}-aks --name ${{ github.event.inputs.environment }}-aks
 
-    - name: Set AKS context
-      uses: azure/aks-set-context@v2.0
-      with:
-        resource-group: rg-${{ github.event.inputs.environment }}-aks
-        cluster-name: ${{ github.event.inputs.environment }}-aks
+    - name: Get kubelogn
+      run: |
+        brew install Azure/kubelogin/kubelogin
+
+    - name: Convert kubeconfig
+      run: kubelogin convert-kubeconfig -l workloadidentity
+
+    #- name: Set AKS context
+    #  uses: azure/aks-set-context@v2.0
+    #  with:
+    #    resource-group: rg-${{ github.event.inputs.environment }}-aks
+    #    cluster-name: ${{ github.event.inputs.environment }}-aks
+
+    - name: Retrieve id-token and store
+      run: |
+        IDTOKEN=$(curl -sSL -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" -H "Accept: application/json; api-version=2.0" -H "Content-Type: application/json" "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=api://AzureADTokenExchange" | jq -r '.value')
+        echo $IDTOKEN > ${RUNNER_TEMP}/.token
+        jwtd() {
+            if [[ -x $(command -v jq) ]]; then
+                jq -R 'split(".") | .[0],.[1] | @base64d | fromjson' <<< "${1}"
+                echo "Signature: $(echo "${1}" | awk -F'.' '{print $3}')"
+            fi
+        }
+        jwtd $IDTOKEN
+        echo "::set-output name=idToken::${IDTOKEN}"
 
     - name: Run Helm
       id: helm
