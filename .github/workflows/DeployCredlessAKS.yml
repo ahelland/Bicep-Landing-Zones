@@ -111,7 +111,9 @@ jobs:
     
     - name: Get OIDCUrl
       id: oidc
-      run: |
+      run: |        
+        az extension add --name aks-preview        
+        az extension update --name aks-preview
         oidcUrl=$(az aks show --resource-group rg-${{ github.event.inputs.environment }}-aks --name ${{ github.event.inputs.environment }}-aks --query "oidcIssuerProfile.issuerUrl" -o tsv)
         echo "::set-output name=oidcUrl::$oidcUrl"
     
