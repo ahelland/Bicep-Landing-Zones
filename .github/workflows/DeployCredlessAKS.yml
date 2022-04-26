@@ -126,6 +126,7 @@ jobs:
       with:
         resource-group: rg-${{ github.event.inputs.environment }}-aks
         cluster-name: ${{ github.event.inputs.environment }}-aks
+        admin: true
 
     - name: Run Helm
       id: helm
