@@ -116,16 +116,20 @@ jobs:
         oidcUrl=$(az aks show --resource-group rg-${{ github.event.inputs.environment }}-aks --name ${{ github.event.inputs.environment }}-aks --query "oidcIssuerProfile.issuerUrl" -o tsv)
         echo "::set-output name=oidcUrl::$oidcUrl"
     
-    - name: Get AKS Creds
-      id: getakscreds
-      run: |
-        az aks get-credentials --resource-group rg-${{ github.event.inputs.environment }}-aks --name ${{ github.event.inputs.environment }}-aks
+    #- name: Get AKS Creds
+    #  id: getakscreds
+    #  run: |
+    #    az aks get-credentials --resource-group rg-${{ github.event.inputs.environment }}-aks --name ${{ github.event.inputs.environment }}-aks
+
+    - name: Set AKS context
+      uses: azure/aks-set-context@v2.0
+      with:
+        resource-group: rg-${{ github.event.inputs.environment }}-aks
+        cluster-name: ${{ github.event.inputs.environment }}-aks
 
     - name: Run Helm
       id: helm
       run: |
-        export KUBECONFIG=/home/runner/.kube/config
-        kubelogin convert-kubeconfig -l azurecli
         helm repo add azure-workload-identity https://azure.github.io/azure-workload-identity/charts
         helm repo update
         helm install workload-identity-webhook azure-workload-identity/workload-identity-webhook --namespace azure-workload-identity-system --create-namespace --set azureTenantID="${{ secrets.AZURE_TENANT_ID }}"
