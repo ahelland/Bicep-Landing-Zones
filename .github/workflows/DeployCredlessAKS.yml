@@ -124,6 +124,8 @@ jobs:
     - name: Run Helm
       id: helm
       run: |
+        export KUBECONFIG=/home/runner/.kube/config
+        kubelogin convert-kubeconfig -l azurecli
         helm repo add azure-workload-identity https://azure.github.io/azure-workload-identity/charts
         helm repo update
-        helm install workload-identity-webhook azure-workload-identity/workload-identity-webhook --namespace azure-workload-identity-system --create-namespace --set azureTenantID="${{ secrets.AZURE_TENANT_ID }}" --kubeconfig /home/runner/.kube/config
+        helm install workload-identity-webhook azure-workload-identity/workload-identity-webhook --namespace azure-workload-identity-system --create-namespace --set azureTenantID="${{ secrets.AZURE_TENANT_ID }}"
