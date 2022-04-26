@@ -150,18 +150,18 @@ jobs:
         export AZURE_FEDERATED_TOKEN_FILE=${RUNNER_TEMP}/.token
         kubectl apply -f ./credless-in-azure-samples/part-4/azure-wi-webhook.yaml
     
-    - name: Install Service Account
-      run: |
-        export SERVICE_ACCOUNT_NAMESPACE="default"
-        export SERVICE_ACCOUNT_NAME="workload-identity-sa"
-        export APPLICATION_CLIENT_ID=$(az ad sp create-for-rbac --name ${{ github.event.inputs.appName }} --query appId)      
-        kubectl apply -f ./credless-in-azure-samples/part-4/service-account.yaml
-
     - name: Create Service Principal for Workload Identity
       run: |
         appId=$(az ad sp create-for-rbac --name ${{ github.event.inputs.appName }} --query appId)
+        export APPLICATION_CLIENT_ID=$appId
         export APPLICATION_OBJECT_ID=$(az ad app show --id $appId --query objectId -o tsv)  
-        export SERVICE_ACCOUNT_ISSUER=${{ steps.oidc.outputs.oidcUrl }}      
+        export SERVICE_ACCOUNT_ISSUER=${{ steps.oidc.outputs.oidcUrl }}  
+
+    - name: Install Service Account
+      run: |
+        export SERVICE_ACCOUNT_NAMESPACE="default"
+        export SERVICE_ACCOUNT_NAME="workload-identity-sa"        
+        kubectl apply -f ./credless-in-azure-samples/part-4/service-account.yaml    
 
     - name: Establish Federated Credential
       run: |        
