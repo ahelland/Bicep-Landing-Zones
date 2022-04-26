@@ -108,7 +108,7 @@ jobs:
       id: rbac
       run: |
         aksId=$(az aks show -g rg-${{ github.event.inputs.environment }}-aks -n ${{ github.event.inputs.environment }}-aks --query id -o tsv)
-        az role assignment create --role "Azure Kubernetes Service RBAC Cluster Admin" --assignee ${{ secrets.AZURE_CLIENT_ID }} --scope $aksId
+        az role assignment create --role "Azure Kubernetes Service Cluster Admin Role" --assignee ${{ secrets.AZURE_CLIENT_ID }} --scope $aksId
     
     - name: Get OIDCUrl
       id: oidc
