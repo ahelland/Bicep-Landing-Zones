@@ -165,6 +165,7 @@ jobs:
         SERVICE_ACCOUNT_NAMESPACE: default
         SERVICE_ACCOUNT_NAME: workload-identity-sa
       run: |
+        export AZURE_FEDERATED_TOKEN_FILE=${RUNNER_TEMP}/.token
         kubectl apply -f ./credless-in-azure-samples/part-4/service-account.yaml    
 
     - name: Establish Federated Credential
