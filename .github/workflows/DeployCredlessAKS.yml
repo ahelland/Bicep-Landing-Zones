@@ -157,7 +157,7 @@ jobs:
         export APPLICATION_CLIENT_ID=$appId
         export APPLICATION_OBJECT_ID=$(az ad app show --id $appId --query objectId -o tsv)  
         export SERVICE_ACCOUNT_ISSUER=${{ steps.oidc.outputs.oidcUrl }}  
-        echo "::set-output name=appId::$appId"
+        echo "::set-output name=APPLICATION_OBJECT_ID::$APPLICATION_OBJECT_ID"
 
     - name: Install Service Account
       env:
@@ -171,6 +171,5 @@ jobs:
         kubectl apply -f ./credless-in-azure-samples/part-4/service-account.yaml    
 
     - name: Establish Federated Credential
-      run: |
-        export APPLICATION_OBJECT_ID=$(az ad app show --id ${{ steps.k8sSp.outputs.appId }} --query objectId -o tsv)         
-        az rest --method POST --uri "https://graph.microsoft.com/beta/applications/${APPLICATION_OBJECT_ID}/federatedIdentityCredentials" --body '@federated-credential.json'
+      run: |        
+        az rest --method POST --uri "https://graph.microsoft.com/beta/applications/${{ steps.k8sSp.outputs.APPLICATION_OBJECT_ID }}/federatedIdentityCredentials" --body '@federated-credential.json'
