@@ -171,5 +171,6 @@ jobs:
         kubectl apply -f ./credless-in-azure-samples/part-4/service-account.yaml    
 
     - name: Establish Federated Credential
-      run: |        
+      run: | 
+        export SERVICE_ACCOUNT_ISSUER=${{ steps.oidc.outputs.oidcUrl }}         
         az rest --method POST --uri "https://graph.microsoft.com/beta/applications/${{ steps.k8sSp.outputs.APPLICATION_OBJECT_ID }}/federatedIdentityCredentials" --body @./credless-in-azure-samples/part-4/federated-credential.json
