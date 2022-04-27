@@ -100,7 +100,7 @@ subjects:
 ---
 apiVersion: v1
 data:
-  AZURE_ENVIRONMENT: ${AZURE_ENVIRONMENT:-AzurePublicCloud}
+  AZURE_ENVIRONMENT: AzurePublicCloud
   AZURE_TENANT_ID: ${AZURE_TENANT_ID}
 kind: ConfigMap
 metadata:
