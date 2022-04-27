@@ -148,7 +148,7 @@ jobs:
         AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       run: |
         export AZURE_FEDERATED_TOKEN_FILE=${RUNNER_TEMP}/.token
-        sed -i 's|${AZURE_TENANT_ID}|$AZURE_TENANT_ID|g' ./credless-in-azure-samples/part-4/azure-wi-webhook.yaml
+        sed -i 's|${AZURE_TENANT_ID}|${{ secrets.AZURE_TENANT_ID }}|g' ./credless-in-azure-samples/part-4/azure-wi-webhook.yaml
         kubectl apply -f ./credless-in-azure-samples/part-4/azure-wi-webhook.yaml
     
     - name: Create Service Principal for Workload Identity
@@ -159,6 +159,7 @@ jobs:
         export APPLICATION_OBJECT_ID=$(az ad app show --id $appId --query objectId -o tsv)  
         export SERVICE_ACCOUNT_ISSUER=${{ steps.oidc.outputs.oidcUrl }}  
         echo "::set-output name=APPLICATION_OBJECT_ID::$APPLICATION_OBJECT_ID"
+        echo "::set-output name=APPLICATION_CLIENT_ID::$APPLICATION_CLIENT_ID"
 
     - name: Install Service Account
       env:
@@ -167,9 +168,7 @@ jobs:
         AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}          
       run: |        
         export AZURE_FEDERATED_TOKEN_FILE=${RUNNER_TEMP}/.token
-        export SERVICE_ACCOUNT_NAMESPACE=default
-        export SERVICE_ACCOUNT_NAME=workload-identity-sa
-        sed -i 's|${SERVICE_ACCOUNT_NAME}|default|g; s|${SERVICE_ACCOUNT_NAMESPACE}|workload-identity-sa|g' ./credless-in-azure-samples/part-4/service-account.yaml
+        sed -i 's|${SERVICE_ACCOUNT_NAME}|workload-identity-sa|g; s|${SERVICE_ACCOUNT_NAMESPACE}|default|g s|${APPLICATION_CLIENT_ID}|${{ steps.k8sSp.outputs.APPLICATION_CLIENT_ID }}|g' ./credless-in-azure-samples/part-4/service-account.yaml
         more ./credless-in-azure-samples/part-4/service-account.yaml
         kubectl apply -f ./credless-in-azure-samples/part-4/service-account.yaml    
 
