@@ -154,7 +154,7 @@ jobs:
     - name: Create Service Principal for Workload Identity
       id: k8sSp
       run: |
-        appId=$(az ad sp create --name sp-${{ github.event.inputs.appName }} --query appId -o tsv)
+        appId=$(az ad sp create-for-rbac --name sp-${{ github.event.inputs.appName }} --query appId -o tsv)
         export APPLICATION_CLIENT_ID=$appId
         export APPLICATION_OBJECT_ID=$(az ad app show --id $appId --query objectId -o tsv)  
         export SERVICE_ACCOUNT_ISSUER=${{ steps.oidc.outputs.oidcUrl }}  
