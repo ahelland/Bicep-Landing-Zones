@@ -172,4 +172,4 @@ jobs:
 
     - name: Establish Federated Credential
       run: |        
-        az rest --method POST --uri "https://graph.microsoft.com/beta/applications/${{ steps.k8sSp.outputs.APPLICATION_OBJECT_ID }}/federatedIdentityCredentials" --body '@federated-credential.json'
+        az rest --method POST --uri "https://graph.microsoft.com/beta/applications/${{ steps.k8sSp.outputs.APPLICATION_OBJECT_ID }}/federatedIdentityCredentials" --body @federated-credential.json
