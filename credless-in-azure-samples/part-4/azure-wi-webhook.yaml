@@ -150,7 +150,7 @@ spec:
     spec:
       containers:
       - args:
-        - --arc-cluster=${ARC_CLUSTER:-false}
+        - --arc-cluster=false
         command:
         - /manager
         env:
