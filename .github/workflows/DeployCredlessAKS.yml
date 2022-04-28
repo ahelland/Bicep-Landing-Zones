@@ -168,11 +168,11 @@ jobs:
         AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}          
       run: |        
         export AZURE_FEDERATED_TOKEN_FILE=${RUNNER_TEMP}/.token
-        sed -i 's|${SERVICE_ACCOUNT_NAMESPACE}|azure-workload-identity-system|g; s|${SERVICE_ACCOUNT_NAME}|azure-wi-webhook-admin|g; s|${APPLICATION_CLIENT_ID}|${{ steps.k8sSp.outputs.APPLICATION_CLIENT_ID }}|g' ./credless-in-azure-samples/part-4/service-account.yaml
+        sed -i 's|${SERVICE_ACCOUNT_NAMESPACE}|azure-workload-identity-system|g; s|${SERVICE_ACCOUNT_NAME}|workload-identity-sa|g; s|${APPLICATION_CLIENT_ID}|${{ steps.k8sSp.outputs.APPLICATION_CLIENT_ID }}|g' ./credless-in-azure-samples/part-4/service-account.yaml
         kubectl apply -f ./credless-in-azure-samples/part-4/service-account.yaml    
 
     - name: Establish Federated Credential  
       continue-on-error: true            
       run: | 
-        sed -i 's|${SERVICE_ACCOUNT_NAMESPACE}|azure-workload-identity-system|g; s|${SERVICE_ACCOUNT_NAME}|azure-wi-webhook-admin|g; s|${SERVICE_ACCOUNT_ISSUER}|${{ steps.oidc.outputs.oidcUrl }}|g' ./credless-in-azure-samples/part-4/federated-credential.json              
+        sed -i 's|${SERVICE_ACCOUNT_NAMESPACE}|azure-workload-identity-system|g; s|${SERVICE_ACCOUNT_NAME}|workload-identity-sa|g; s|${SERVICE_ACCOUNT_ISSUER}|${{ steps.oidc.outputs.oidcUrl }}|g' ./credless-in-azure-samples/part-4/federated-credential.json              
         az rest --method POST --uri "https://graph.microsoft.com/beta/applications/${{ steps.k8sSp.outputs.APPLICATION_OBJECT_ID }}/federatedIdentityCredentials" --body @./credless-in-azure-samples/part-4/federated-credential.json
