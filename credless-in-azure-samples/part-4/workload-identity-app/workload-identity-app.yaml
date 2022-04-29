@@ -103,8 +103,15 @@ metadata:
   namespace: azure-workload-identity-system
   annotations:
     kubernetes.io/ingress.class: nginx
-  defaultBackend:
-    service:
-      name: workload-identity-frontend
-      port:
-        number: 80
+    nginx.ingress.kubernetes.io/default-backend: workload-identity-frontend
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: workload-identity-frontend
+            port:
+              number: 80
