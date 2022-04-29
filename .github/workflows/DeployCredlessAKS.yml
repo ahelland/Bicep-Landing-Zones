@@ -213,5 +213,5 @@ jobs:
         AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}          
       run: |        
         export AZURE_FEDERATED_TOKEN_FILE=${RUNNER_TEMP}/.token
-        sed -i 's|${FRONTEND_IMAGE}|workload-identity-frontend:${{ github.run_number }}|g; s|${BACKEND_IMAGE}|workload-identity-backend:${{ github.run_number }}|g' ./credless-in-azure-samples/part-4/workload-identity-app/workload-identity-app.yaml
+        sed -i 's|${FRONTEND_IMAGE}|${{ steps.getACRName.outputs.acrName }}.azurecr.io/workload-identity-frontend:${{ github.run_number }}|g; s|${BACKEND_IMAGE}|${{ steps.getACRName.outputs.acrName }}.azurecr.io/workload-identity-backend:${{ github.run_number }}|g' ./credless-in-azure-samples/part-4/workload-identity-app/workload-identity-app.yaml
         kubectl apply -f ./credless-in-azure-samples/part-4/workload-identity-app/workload-identity-app.yaml   
