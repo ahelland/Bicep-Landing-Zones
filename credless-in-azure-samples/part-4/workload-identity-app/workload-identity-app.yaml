@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: azure-workload-identity-system
+  name: workload-identity-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: workload-identity-backend
+  template:
+    metadata:
+      namespace: azure-workload-identity-system
+      labels:
+        app: workload-identity-backend
+    spec:
+      serviceAccountName: workload-identity-sa
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+      - name: workload-identity-backend
+        image: blazoreasyauth20220310230320.azurecr.io/workloadidentitybackend:latest
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        ports:
+        - containerPort: 80
+          name: back       
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: azure-workload-identity-system
+  name: workload-identity-backend
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: workload-identity-backend
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: azure-workload-identity-system
+  name: workload-identity-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: workload-identity-frontend
+  template:
+    metadata:
+      namespace: azure-workload-identity-system
+      labels:
+        app: workload-identity-frontend
+    spec:
+      serviceAccountName: workload-identity-sa
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+      - name: workload-identity-frontend
+        image: blazoreasyauth20220310230320.azurecr.io/workloadidentityfrontend:latest
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        ports:
+        - containerPort: 80
+        env:
+        - name: BACK
+          value: "workload-identity-backend"
+        - name: API__api_address
+          value: "http://workload-identity-backend:80/api/graph"
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Development"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: azure-workload-identity-system
+  name: workload-identity-frontend
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+  selector:
+    app: workload-identity-frontend
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: workload-identity-ingress
+  namespace: azure-workload-identity-system
+  annotations:
+    kubernetes.io/ingress.class: nginx
