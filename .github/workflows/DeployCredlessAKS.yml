@@ -176,3 +176,16 @@ jobs:
       run: | 
         sed -i 's|${SERVICE_ACCOUNT_NAMESPACE}|azure-workload-identity-system|g; s|${SERVICE_ACCOUNT_NAME}|workload-identity-sa|g; s|${SERVICE_ACCOUNT_ISSUER}|${{ steps.oidc.outputs.oidcUrl }}|g' ./credless-in-azure-samples/part-4/federated-credential.json              
         az rest --method POST --uri "https://graph.microsoft.com/beta/applications/${{ steps.k8sSp.outputs.APPLICATION_OBJECT_ID }}/federatedIdentityCredentials" --body @./credless-in-azure-samples/part-4/federated-credential.json
+
+    # We are making the assumption you have only one registry in this resource group
+    - name: Retrieve name of Container Registry
+      id: getACRName
+      uses: azure/powershell@v1
+      with: 
+        inlineScript: |
+         acrName=$(az acr list -g rg-${{ github.event.inputs.environment }}-aks-acr -o tsv --query [0].name)
+         echo "::set-output name=acrName::$acrName"
+
+    - name: Integrate ACR and AKS
+      run: |
+        az aks update -n ${{ github.event.inputs.environment }}-aks -g 'rg-${{ github.event.inputs.environment }}-aks' --attach-acr ${{ steps.getACRName.outputs.acrName }}
