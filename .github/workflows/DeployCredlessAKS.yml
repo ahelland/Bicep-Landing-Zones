@@ -183,7 +183,7 @@ jobs:
       uses: azure/powershell@v1
       with: 
         inlineScript: |
-          acrName=$(az acr list -g rg-${{ github.event.inputs.environment }}-aks-acr -o tsv --query [0].name)
+          $acrName=(az acr list -g rg-${{ github.event.inputs.environment }}-aks-acr -o tsv --query [0].name)
           echo "::set-output name=acrName::$acrName"
         azPSVersion: "latest"
 
