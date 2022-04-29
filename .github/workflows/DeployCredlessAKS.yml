@@ -95,7 +95,7 @@ jobs:
         adminGroupId=$(az ad group create --display-name $appName --mail-nickname $appName --query objectId)
         echo "::set-output name=adminGroupId::$adminGroupId"
 
-    - name: Deploy AKS
+    - name: Deploy AKS and ACR
       uses: azure/cli@v1      
       with: 
         inlineScript: |
@@ -183,8 +183,9 @@ jobs:
       uses: azure/powershell@v1
       with: 
         inlineScript: |
-         acrName=$(az acr list -g rg-${{ github.event.inputs.environment }}-aks-acr -o tsv --query [0].name)
-         echo "::set-output name=acrName::$acrName"
+          acrName=$(az acr list -g rg-${{ github.event.inputs.environment }}-aks-acr -o tsv --query [0].name)
+          echo "::set-output name=acrName::$acrName"
+        azPSVersion: "latest"
 
     - name: Integrate ACR and AKS
       run: |
