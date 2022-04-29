@@ -1,0 +1,32 @@
+﻿@page "/"
+@using Microsoft.Extensions.Configuration;
+@using System.Net.Http;
+@inject IConfiguration configuration;
+
+<PageTitle>Workload Identity - Frontend</PageTitle>
+
+<h1>Workload Identity Graph Lookup</h1>
+
+<p>
+    It looks like your tenant organization name is @orgName. <br />
+    And if the above line doesn't look right; well then there's a bug in the setup somewhere.
+</p>
+
+@code {
+    protected string orgName = string.Empty;
+
+    protected override Task OnInitializedAsync()
+    {
+        using (var client = new HttpClient())
+        {
+            var apiAddress = configuration.GetSection("API")["api_address"];
+            string requestUrl = apiAddress;
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+            HttpResponseMessage response = client.SendAsync(request).Result;
+            var responseString = response.Content.ReadAsStringAsync().Result;
+            orgName = responseString;
+        }
+        return base.OnInitializedAsync();
+    }
+   
+}
