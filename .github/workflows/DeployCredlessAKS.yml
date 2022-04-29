@@ -204,7 +204,7 @@ jobs:
     - name: Add Permissions (MS Graph Organization.Read.All) 
       run: |
         az ad app permission add --id ${{ steps.k8sSp.outputs.APPLICATION_CLIENT_ID }} --api 00000003-0000-0000-c000-000000000000 --api-permissions 498476ce-e0fe-48b0-b801-37ba7e2685c6=Role
-        az ad app permission grant --id ${{ steps.k8sSp.outputs.APPLICATION_CLIENT_ID }} --api 00000003-0000-0000-c000-000000000000
+        az ad app permission admin-consent --id ${{ steps.k8sSp.outputs.APPLICATION_CLIENT_ID }} 
 
     - name: Deploy workload-identity-app
       env:
