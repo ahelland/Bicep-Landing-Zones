@@ -193,5 +193,10 @@ jobs:
 
     - name: Build and push backend container to ACR
       run: |
-        cd /credless-in-azure-samples/part-4/workload-identity-app/workload-identity-backend
+        cd ./credless-in-azure-samples/part-4/workload-identity-app/workload-identity-backend
         az acr build --registry ${{ steps.getACRName.outputs.acrName }} --image workload-identity-backend:${{ github.run_number }} .
+
+    - name: Build and push frontend container to ACR
+      run: |
+        cd ./credless-in-azure-samples/part-4/workload-identity-app/workload-identity-frontend
+        az acr build --registry ${{ steps.getACRName.outputs.acrName }} --image workload-identity-frontend:${{ github.run_number }} .
