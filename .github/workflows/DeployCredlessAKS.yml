@@ -200,3 +200,18 @@ jobs:
       run: |
         cd ./credless-in-azure-samples/part-4/workload-identity-app/workload-identity-frontend
         az acr build --registry ${{ steps.getACRName.outputs.acrName }} --image workload-identity-frontend:${{ github.run_number }} .
+
+    - name: Add Permissions (MS Graph Organization.Read.All) 
+      run: |
+        az ad app permission add --id ${{ steps.k8sSp.outputs.APPLICATION_CLIENT_ID }} --api 00000003-0000-0000-c000-000000000000 --api-permissions 498476ce-e0fe-48b0-b801-37ba7e2685c6=Scope 
+        az ad app permission grant --id ${{ steps.k8sSp.outputs.APPLICATION_CLIENT_ID }} --api 00000003-0000-0000-c000-000000000000
+
+    - name: Deploy workload-identity-app
+      env:
+        AZURE_AUTHORITY_HOST: https://login.microsoftonline.com/
+        AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}          
+      run: |        
+        export AZURE_FEDERATED_TOKEN_FILE=${RUNNER_TEMP}/.token
+        sed -i 's|${FRONTEND_IMAGE}|workload-identity-frontend:${{ github.run_number }}|g; s|${BACKEND_IMAGE}|workload-identity-backend:${{ github.run_number }}|g' ./credless-in-azure-samples/part-4/workload-identity-app/workload-identity-app.yaml
+        kubectl apply -f ./credless-in-azure-samples/part-4/workload-identity-app/workload-identity-app.yaml   
