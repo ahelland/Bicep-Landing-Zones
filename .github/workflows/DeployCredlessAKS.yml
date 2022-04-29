@@ -190,3 +190,8 @@ jobs:
     - name: Integrate ACR and AKS
       run: |
         az aks update -n ${{ github.event.inputs.environment }}-aks -g 'rg-${{ github.event.inputs.environment }}-aks' --attach-acr ${{ steps.getACRName.outputs.acrName }}
+
+    - name: Build and push backend container to ACR
+      run: |
+        cd /credless-in-azure-samples/part-4/workload-identity-app/workload-identity-backend
+        az acr build --registry ${{ steps.getACRName.outputs.acrName }} --image workload-identity-backend:${{ github.run_number }} .
