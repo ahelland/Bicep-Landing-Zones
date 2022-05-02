@@ -104,7 +104,7 @@ jobs:
             --template-file ./credless-in-azure-samples/part-4/main.bicep  \
             --parameters ./credless-in-azure-samples/part-4/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} adminGroupId=${{ steps.groupcreate.outputs.adminGroupId }}
     
-    - name: Assign RBAC      
+    - name: Assign AKS RBAC role to the GitHub Action user     
       run: |
         aksId=$(az aks show -g rg-${{ github.event.inputs.environment }}-aks -n ${{ github.event.inputs.environment }}-aks --query id -o tsv)
         az role assignment create --role "Azure Kubernetes Service RBAC Cluster Admin" --assignee ${{ secrets.AZURE_CLIENT_ID }} --scope $aksId
@@ -125,7 +125,7 @@ jobs:
       run: |
         brew install Azure/kubelogin/kubelogin
 
-    - name: Convert kubeconfig
+    - name: Convert kubeconfig for non-interactive use
       run: kubelogin convert-kubeconfig -l workloadidentity
     
     - name: Retrieve id-token and store
@@ -177,7 +177,7 @@ jobs:
         sed -i 's|${SERVICE_ACCOUNT_NAMESPACE}|azure-workload-identity-system|g; s|${SERVICE_ACCOUNT_NAME}|workload-identity-sa|g; s|${SERVICE_ACCOUNT_ISSUER}|${{ steps.oidc.outputs.oidcUrl }}|g' ./credless-in-azure-samples/part-4/federated-credential.json              
         az rest --method POST --uri "https://graph.microsoft.com/beta/applications/${{ steps.k8sSp.outputs.APPLICATION_OBJECT_ID }}/federatedIdentityCredentials" --body @./credless-in-azure-samples/part-4/federated-credential.json
 
-    # We are making the assumption you have only one registry in this resource group
+    # We are making the assumption you have only one registry in the ACR resource group
     - name: Retrieve name of Container Registry
       id: getACRName
       uses: azure/powershell@v1
@@ -201,7 +201,9 @@ jobs:
         cd ./credless-in-azure-samples/part-4/workload-identity-app/workload-identity-frontend
         az acr build --registry ${{ steps.getACRName.outputs.acrName }} --image workload-identity-frontend:${{ github.run_number }} .
 
-    - name: Add Permissions  
+    - name: Add Permissions (MS Graph User.Read.All)
+      # Note that the grant/consent step will not work unless extra permissions are given to the GitHub Action Service Principal,
+      # but it will appear to go through and not present an error for the pipeline execution. 
       run: |
         az ad app permission add --id ${{ steps.k8sSp.outputs.APPLICATION_CLIENT_ID }} --api 00000003-0000-0000-c000-000000000000 --api-permissions df021288-bdef-4463-88db-98f22de89214=Role        
         az ad app permission grant --id ${{ steps.k8sSp.outputs.APPLICATION_CLIENT_ID }} --api 00000003-0000-0000-c000-000000000000
