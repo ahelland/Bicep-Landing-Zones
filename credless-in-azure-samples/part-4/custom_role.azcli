@@ -1,0 +1,13 @@
+# The instructions below are needed to ensure the app used for CI/CD has the permissions
+# needed to run the GitHub Action
+
+# To retrieve the subscription id
+az account show --query id -o tsv
+# Make sure you replace the placeholder value YOUR_SUBSCRIPTION_ID (in github_action_user_role.json)
+# with the id you acquired in the previous step
+az role definition create --role-definition github_action_user_role.json
+# Get the id of the service principal for your CI/CD app registration
+# Note: assuming the app is named "GitHub Action". Adjust according to your environment.
+$spObjectId=(az ad sp list --display-name "GitHub Action" --query [].objectId -o tsv)
+# Assign the custom role to your GitHub Action service principal
+az role assignment create --assignee $spObjectId --role "GitHub Action User"
