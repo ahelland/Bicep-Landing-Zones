@@ -16,11 +16,10 @@ resource loganalytics 'Microsoft.OperationalInsights/workspaces@2020-03-01-previ
   })
 }
 
-resource containerenvironment 'Microsoft.Web/kubeEnvironments@2021-03-01' = {
+resource containerenvironment 'Microsoft.App/managedEnvironments@2022-01-01-preview' = {
   name: 'container-environment-${name}'
   location: location
-  properties: {
-    internalLoadBalancerEnabled: false
+  properties: {    
     appLogsConfiguration: {
       destination: 'log-analytics'
       logAnalyticsConfiguration: {
@@ -30,5 +29,6 @@ resource containerenvironment 'Microsoft.Web/kubeEnvironments@2021-03-01' = {
     }
   }
 }
+
 
 output id string = containerenvironment.id
