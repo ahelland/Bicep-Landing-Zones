@@ -14,12 +14,11 @@ param registryPassword string = ''
 
 param envVars array = []
 
-resource containerApp 'Microsoft.Web/containerApps@2021-03-01' = {
+resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
   name: name
-  kind: 'containerapp'
   location: location
   properties: {
-    kubeEnvironmentId: containerAppEnvironmentId
+    managedEnvironmentId: containerAppEnvironmentId
     configuration: {
       secrets: [
         {
