@@ -7,6 +7,9 @@ param containerImage string
 param useExternalIngress bool = false
 param containerPort int = 80
 
+param managedIdentity string
+//param acrIdentity string
+
 param registry string
 param registryUsername string = ''
 @secure()
@@ -17,7 +20,10 @@ param envVars array = []
 resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
   name: name
   location: location
-  properties: {
+  identity: {
+    type: managedIdentity
+  }
+  properties: { 
     managedEnvironmentId: containerAppEnvironmentId
     configuration: {
       secrets: [
@@ -28,6 +34,7 @@ resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
       ]
       registries: [
         {
+          //identity: acrIdentity
           server: registry
           username: registryUsername
           passwordSecretRef: 'container-registry-password'

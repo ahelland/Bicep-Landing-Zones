@@ -16,6 +16,8 @@ param registryUsername string
 @secure()
 param registryPassword string
 
+param managedIdentity string = 'None'
+
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: 'rg-${env}-${appName}'
   location: location
@@ -35,6 +37,7 @@ module backendContainerApp '../container-app.bicep' = {
   scope: rg
   name: '${appName}-backend'
   params: {
+    managedIdentity: managedIdentity
     containerAppEnvironmentId: containerAppEnvironment.outputs.id
     containerImage: backendContainerImage
     containerPort: containerPort
@@ -57,6 +60,7 @@ module frontendContainerApp '../container-app.bicep' = {
   scope: rg
   name: '${appName}-frontend'
   params: {
+    managedIdentity: managedIdentity
     containerAppEnvironmentId: containerAppEnvironment.outputs.id
     containerImage: frontendContainerImage
     containerPort: containerPort
