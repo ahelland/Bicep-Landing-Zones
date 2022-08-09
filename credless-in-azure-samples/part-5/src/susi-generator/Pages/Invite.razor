@@ -1,0 +1,56 @@
+﻿@page "/Invite"
+@inherits InviteBase
+
+<div class="alert alert-info" role="alert">
+    Fill in the form below with the desired values. This info will be embedded in the link, and read by Azure AD B2C to prefill during SignUp.
+</div>
+
+<EditForm Model="@SignUp" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group row">
+        <label for="subject" class="col-sm-4 col-form-label">Email</label>
+        <InputText id="email" @bind-Value="@SignUp.email" class="form-control col-sm-4" placeholder="Email"></InputText>
+        <ValidationMessage class="offset-sm-3 col-sm-8" For="@(() => SignUp.email)" />
+    </div>
+
+    <div class="form-group row">
+        <label for="displayName" class="col-sm-4 col-form-label">Display Name</label>
+        <InputText id="displayName" @bind-Value="@SignUp.displayName" class="form-control col-sm-4" placeholder="Display Name"></InputText>
+        <ValidationMessage class="offset-sm-3 col-sm-8" For="@(() => SignUp.displayName)" />
+    </div>
+
+    <div class="form-group row">
+        <label for="givenName" class="col-sm-4 col-form-label">Given Name</label>
+        <InputText id="givenName" @bind-Value="@SignUp.givenName" class="form-control col-sm-4" placeholder="Given Name"></InputText>
+        <ValidationMessage class="offset-sm-3 col-sm-8" For="@(() => SignUp.givenName)" />
+    </div>
+
+    <div class="form-group row">
+        <label for="surname" class="col-sm-4 col-form-label">Surname</label>
+        <InputText id="surname" @bind-Value="@SignUp.surname" class="form-control col-sm-4" placeholder="Surname"></InputText>
+        <ValidationMessage class="offset-sm-3 col-sm-8" For="@(() => SignUp.surname)" />
+    </div>
+
+    <div class="form-group row">
+        <label for="audience" class="col-sm-4 col-form-label">Audience</label>
+        <InputText id="audience" @bind-Value="@SignUp.audience" class="form-control col-sm-4" placeholder="Audience"></InputText>
+        <ValidationMessage class="offset-sm-3 col-sm-8" For="@(() => SignUp.audience)" />
+    </div>
+
+</EditForm>
+
+<hr />
+
+<div class="alert alert-info" role="alert">
+    Generated link
+</div>
+<hr />
+<code>
+    <a href="@output" target="_blank">@output</a>
+</code>
+
+<hr />
+
+<button class="btn btn-primary" @onclick="@GenerateInviteLinkAsync">Generate link</button>

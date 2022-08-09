@@ -1,0 +1,38 @@
+﻿@page "/"
+@inherits IndexBase
+
+<div class="alert alert-info" role="alert">
+    Fill in the details below and click the button.
+</div>
+
+<EditForm Model="@SignIn" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />    
+
+    <div class="form-group row">
+        <label for="subject" class="col-sm-4 col-form-label">Email</label>
+        <InputText id="email" @bind-Value="@SignIn.email" class="form-control col-sm-4" placeholder="Email"></InputText>
+        <ValidationMessage class="offset-sm-3 col-sm-8" For="@(() => SignIn.email)" />
+    </div>
+
+    <div class="form-group row">
+        <label for="audience" class="col-sm-4 col-form-label">Audience</label>
+        <InputText id="audience" @bind-Value="@SignIn.audience" class="form-control col-sm-4" placeholder="Audience"></InputText>
+        <ValidationMessage class="offset-sm-3 col-sm-8" For="@(() => SignIn.audience)" />
+    </div>
+
+</EditForm>
+
+<hr />
+
+<div class="alert alert-info" role="alert">
+    Generated link
+</div>
+<hr />
+<code>
+    <a href="@output" target="_blank">@output</a> 
+</code>
+
+<hr />
+
+<button class="btn btn-primary" @onclick="@GenerateSignInLinkAsync">Generate link</button>
