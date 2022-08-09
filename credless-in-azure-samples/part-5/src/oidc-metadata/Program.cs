@@ -8,6 +8,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 var app = builder.Build();
 
+//Make sure scheme is https
+app.Use((context, next) =>
+{
+    context.Request.Scheme = "https";
+    return next();
+});
+
 app.UseHttpsRedirection();
 
 app.MapGet("/.well-known/openid-configuration", (HttpContext httpContext) =>
