@@ -1,0 +1,55 @@
+﻿@page "/"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider;
+
+<PageTitle>Index</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        @if (claims.Count() > 0)
+        {
+            <h2>Claims</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Claim Type</th>
+                        <th scope="col">Claim Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var claim in claims)
+                    {
+                        <tr>
+                            <td>@claim.Type</td>
+                            <td>@claim.Value</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </Authorized>
+    <NotAuthorized>
+        When logged in you should see a list of your claims. So what are you waiting for?
+    </NotAuthorized>
+</AuthorizeView>
+
+@code
+{
+    protected IEnumerable<Claim> claims = Enumerable.Empty<Claim>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        
+        if (user.Identity.IsAuthenticated)
+        {   
+            claims = user.Claims;
+        }
+        else
+        {
+            //Do nothing
+        }
+    }
+}
