@@ -8,7 +8,6 @@ param useExternalIngress bool = false
 param containerPort int = 80
 
 param managedIdentity string
-//param acrIdentity string
 
 param registry string
 param registryUsername string = ''
@@ -32,14 +31,11 @@ resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
           value: registryPassword
         }
       ]
-      registries: [
-        {
-          //identity: acrIdentity
+      registries: [ {
           server: registry
           username: registryUsername
           passwordSecretRef: 'container-registry-password'
-        }
-      ]
+        } ]
       ingress: {
         external: useExternalIngress
         targetPort: containerPort
@@ -61,3 +57,4 @@ resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
 }
 
 output fqdn string = containerApp.properties.configuration.ingress.fqdn
+output managedIdentityPrincipal string = containerApp.identity.principalId
