@@ -125,7 +125,7 @@ jobs:
         cd ./credless-in-azure-samples/part-5/src/susi-generator
         az acr build --registry ${{ steps.getAcrName.outputs.acrName }} --image susigen:${{ github.run_number }} .
 
-    - name: Build and push metadata container to ACR
+    - name: Build and push b2csusiapp container to ACR
       run: |
         cd ./credless-in-azure-samples/part-5/src/b2c-susi-app
         az acr build --registry ${{ steps.getAcrName.outputs.acrName }} --image b2csusiapp:${{ github.run_number }} .
@@ -162,7 +162,7 @@ jobs:
 
     - name: 'Update App Registration'
       run: |
-        export replyUrl=${{ steps.getOutputs.outputs.replyUrl }}
+        export replyUrl=${{ steps.getReplyUrl.outputs.replyUrl }}
         az ad app update --id ${{ steps.appreg.outputs.appId }} --web-home-page-url "https://$replyUrl"  --web-redirect-uris "https://$replyUrl/.auth/login/aad/callback"  
 
   Deploy-B2C:
