@@ -123,7 +123,7 @@ jobs:
           az deployment sub create --location norwayeast \
             --name ${{ github.run_number }} \
             --template-file ./credless-in-azure-samples/part-5/infra/level-2/main.bicep \
-            --parameters ./credless-in-azure-samples/part-5/infra/level-2/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} acrName=$acrName authClientId=${{ steps.appreg.outputs.appId }} AzureAd__Instance=https://${{ secrets.B2C_TENANT_NAME }} AzureAd__Domain=${{ secrets.B2C_TENANT_NAME }} AzureAd__TenantId=${{ secrets.B2C_AZURE_TENANT_ID }} AzureAd__ClientId=${{ secrets.B2C_AZURE_CLIENT_ID }}
+            --parameters ./credless-in-azure-samples/part-5/infra/level-2/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }} acrName=$acrName authClientId=${{ steps.appreg.outputs.appId }} AzureAd__Instance=https://${{ secrets.B2C_TENANT_NAME }} AzureAd__Domain=${{ secrets.B2C_TENANT_NAME }} AzureAd__TenantId=${{ secrets.B2C_AZURE_TENANT_ID }} AzureAd__ClientId=${{ secrets.B2C_AZURE_CLIENT_ID }}
 
     - name: 'Retrieve ReplyUrl'
       id: getReplyUrl
