@@ -1,0 +1,186 @@
+name: Deploy Credless B2C Sample App
+#on: [push]
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to verify'
+        type: environment
+        required: true
+  
+permissions:
+      id-token: write
+      contents: read
+      
+jobs: 
+  lint:
+    name: Lint code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Lint code
+        run: |
+          az bicep build --file ./credless-in-azure-samples/part-5/infra/level-2/main.bicep
+
+  Validate:
+    runs-on: ubuntu-latest
+    needs: lint
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: 'Az CLI login'
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: 'Run preflight validation'
+        uses: azure/arm-deploy@v1
+        with: 
+          scope: subscription
+          region: norwayeast
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          deploymentName: ${{ github.run_number }}         
+          template: ./credless-in-azure-samples/part-5/infra/level-2/main.bicep
+          parameters: ./credless-in-azure-samples/part-5/infra/level-2/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} authClientId=client-guid-1234 AzureAd__Instance=https://contoso.b2clogin.com/ AzureAd__Domain=contoso.onmicrosoft.com AzureAd__TenantId=tenant-guid-1234 AzureAd__ClientId=b2c-client-guid-1234
+          deploymentMode: Validate
+
+  What-if:
+    runs-on: ubuntu-latest
+    needs: lint
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: 'Az CLI login'
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: 'Run what-if'
+        uses: azure/cli@v1      
+        with: 
+          inlineScript: |
+            az deployment sub what-if --location norwayeast \
+              --name ${{ github.run_number }} \
+              --template-file az bicep build --file ./credless-in-azure-samples/part-5/infra/level-2/main.bicep \
+              --parameters ./credless-in-azure-samples/part-5/infra/level-2/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} authClientId=client-guid-1234 AzureAd__Instance=https://contoso.b2clogin.com/ AzureAd__Domain=contoso.onmicrosoft.com AzureAd__TenantId=tenant-guid-1234 AzureAd__ClientId=b2c-client-guid-1234
+
+  Deploy:
+    runs-on: ubuntu-latest
+    needs: validate
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: 'Az CLI login'
+      uses: azure/login@v1
+      with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Create Azure AD App Registration
+      id: appreg
+      run: |
+        export appName=${{ github.event.inputs.appName }}            
+        export replyUrl="https://${{ github.event.inputs.appName }}.placeholder.azurecontainerapps.io/.auth/login/aad/callback" 
+        appId=$(az ad app create --display-name $appName --reply-urls $replyUrl --query appId) 
+        echo "::set-output name=appId::$appId"
+  
+    - name: 'Deploy Azure Container Registry'
+      uses: azure/cli@v1      
+      with:
+        inlineScript: |
+          az deployment sub create --location norwayeast \
+            --name ${{ github.run_number }} \
+            --template-file ./credless-in-azure-samples/part-5/infra/level-1/main.bicep \
+            --parameters ./credless-in-azure-samples/part-5/infra/level-1/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }}
+
+    - name: 'Retrieve AcrName'
+      id: getACrName
+      uses: azure/powershell@v1
+      with:
+        inlineScript: |
+          $acrName=(az deployment sub show -n ${{ github.run_number }} | ConvertFrom-Json | foreach properties | foreach parameters | select -ExpandProperty 'acrName')
+          $acrName=$acrName.value
+          echo "::set-output name=acrName::$acrName"
+        azPSVersion: "latest"
+
+    - name: 'Deploy Azure Container Environment, Apps and stuff'
+      uses: azure/cli@v1      
+      with:
+        inlineScript: |
+          export acrName=${{ steps.getACrName.outputs.acrName }}
+          az deployment sub create --location norwayeast \
+            --name ${{ github.run_number }} \
+            --template-file ./credless-in-azure-samples/part-5/infra/level-2/main.bicep \
+            --parameters ./credless-in-azure-samples/part-5/infra/level-2/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} acrName=$acrName authClientId=${{ steps.appreg.outputs.appId }} AzureAd__Instance=https://${{ secrets.B2C_TENANT_NAME }}/ AzureAd__Domain=${{ secrets.B2C_TENANT_NAME }} AzureAd__TenantId=${{ secrets.B2C_AZURE_TENANT_ID }} AzureAd__ClientId=${{ secrets.B2C_AZURE_CLIENT_ID }}
+
+    - name: 'Retrieve ReplyUrl'
+      id: getReplyUrl
+      uses: azure/powershell@v1
+      with:
+        inlineScript: |
+          $replyUrl=(az deployment sub show -n ${{ github.run_number }} | ConvertFrom-Json | foreach properties | foreach outputs | select -ExpandProperty 'b2capp_url')
+          $replyUrl=$replyUrl.value
+          echo "::set-output name=replyUrl::$replyUrl"
+        azPSVersion: "latest"
+    
+    - name: 'Retrieve Metadata Endpoint'
+      id: getMetadataUrl
+      uses: azure/powershell@v1
+      with:
+        inlineScript: |
+          $metadata=(az deployment sub show -n ${{ github.run_number }} | ConvertFrom-Json | foreach properties | foreach outputs | select -ExpandProperty 'oidc_metadata')
+          $metadata=$metadata.value
+          echo "::set-output name=metadata::$metadata"
+        azPSVersion: "latest"
+
+    - name: 'Update App Registration'
+      run: |
+        export replyUrl=${{ steps.getOutputs.outputs.replyUrl }}
+        az ad app update --id ${{ steps.appreg.outputs.appId }} --homepage "https://$replyUrl"  --reply-urls "https://$replyUrl/.auth/login/aad/callback"  
+
+  Deploy-B2C:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: 'Az CLI login'
+      uses: azure/login@v1
+      with:
+          client-id: ${{ secrets.B2C_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.B2C_AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+          enable-AzPSSession: true
+
+    - name: Replace placeholder values
+      run: |
+        sed -i 's|${B2C_TENANT_NAME}|${{ secrets.B2C_TENANT_NAME }}|g' ./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/TrustFrameworkBase.xml
+        sed -i 's|${B2C_TENANT_NAME}|${{ secrets.B2C_TENANT_NAME }}|g' ./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/TrustFrameworkLocalization.xml
+        sed -i 's|${B2C_TENANT_NAME}|${{ secrets.B2C_TENANT_NAME }}|g; s|${B2C_PROXY_IEF_APPID}|${{ secrets.B2C_PROXY_IEF_APPID }}|g; s|${B2C_IEF_APPID}|${{ secrets.B2C_IEF_APPID }}|g' ./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/TrustFrameworkExtensions.xml
+        sed -i 's|${B2C_TENANT_NAME}|${{ secrets.B2C_TENANT_NAME }}|g' ./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/SignUpOrSignin.xml
+        sed -i 's|${B2C_TENANT_NAME}|${{ secrets.B2C_TENANT_NAME }}|g' s|${OIDC_METADATA_URL}|${{ steps.getMetadataUrl.outputs.metadata }}|g; s|{TOKEN_HINT_AUDIENCE}|contosob2c|g; s|${TOKEN_HINT_ISSUER}|https://contoso.com|g ' ./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/Invitation_Link.xml
+        sed -i 's|${B2C_TENANT_NAME}|${{ secrets.B2C_TENANT_NAME }}|g' s|${OIDC_METADATA_URL}|${{ steps.getMetadataUrl.outputs.metadata }}|g; s|{TOKEN_HINT_AUDIENCE}|contosob2c|g; s|${TOKEN_HINT_ISSUER}|https://contoso.com|g'./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/Signin_Link.xml
+        
+    - name: 'Upload Custom Policies'
+      uses: azure/powershell@v1
+      with:
+        inlineScript: |
+          $token = Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com/"
+          Install-Module -Name Microsoft.Graph.Identity.SignIns
+          Select-MgProfile -Name "beta"
+          Connect-MgGraph -AccessToken $token.Token
+          Set-MgTrustFrameworkPolicyContent -TrustFrameworkPolicyId "B2C_1A_TrustFrameworkBase_GitHub" -InFile "./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/TrustFrameworkBase.xml"
+          Set-MgTrustFrameworkPolicyContent -TrustFrameworkPolicyId "B2C_1A_TrustFrameworkLocalization_GitHub" -InFile "./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/TrustFrameworkLocalization.xml"
+          Set-MgTrustFrameworkPolicyContent -TrustFrameworkPolicyId "B2C_1A_TrustFrameworkExtensions_GitHub" -InFile "./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/TrustFrameworkExtensions.xml"
+          Set-MgTrustFrameworkPolicyContent -TrustFrameworkPolicyId "B2C_1A_Signup_Signin_GitHub" -InFile "./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/SignUpOrSignin.xml"
+          Set-MgTrustFrameworkPolicyContent -TrustFrameworkPolicyId "B2C_1A_Invitation_Link_GitHub" -InFile "./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/Invitation_Link.xml"
+          Set-MgTrustFrameworkPolicyContent -TrustFrameworkPolicyId "B2C_1A_Signin_Link_GitHub" -InFile "./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/Signin_Link.xml"
+        azPSVersion: "latest"  
