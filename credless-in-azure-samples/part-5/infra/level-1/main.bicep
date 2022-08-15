@@ -12,7 +12,7 @@ param acrManagedIdentity string = 'None'
 @minLength(5)
 @maxLength(50)
 @description('Provide a globally unique name of your Azure Container Registry')
-param acrName string = 'acr${uniqueString('rg-${env}-aks-acr')}'
+param acrName string = 'acr${uniqueString('rg-${env}-${appName}-acr')}'
 
 @description('Provide a tier of your Azure Container Registry.')
 param acrSku string = 'Basic'
