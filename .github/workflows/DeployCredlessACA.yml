@@ -67,7 +67,7 @@ jobs:
           inlineScript: |
             az deployment sub what-if --location norwayeast \
               --name ${{ github.run_number }} \
-              --template-file --file ./credless-in-azure-samples/part-5/infra/level-2/main.bicep \
+              --template-file ./credless-in-azure-samples/part-5/infra/level-2/main.bicep \
               --parameters ./credless-in-azure-samples/part-5/infra/level-2/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} acrName=placeholder authClientId=client-guid-1234 AzureAd__Instance=https://contoso.b2clogin.com/ AzureAd__Domain=contoso.onmicrosoft.com AzureAd__TenantId=tenant-guid-1234 AzureAd__ClientId=b2c-client-guid-1234
 
   Deploy:
