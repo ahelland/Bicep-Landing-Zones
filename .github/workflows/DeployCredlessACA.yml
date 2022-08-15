@@ -7,6 +7,10 @@ on:
         description: 'Environment to verify'
         type: environment
         required: true
+      appName:
+        description: 'Name of app'
+        type: string
+        required: true
   
 permissions:
       id-token: write
