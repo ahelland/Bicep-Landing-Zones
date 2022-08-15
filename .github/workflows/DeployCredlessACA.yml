@@ -49,7 +49,7 @@ jobs:
 
   What-if:
     runs-on: ubuntu-latest
-    needs: lint
+    needs: Validate
     environment: ${{ github.event.inputs.environment }}
     steps:
       - uses: actions/checkout@v2
@@ -67,7 +67,7 @@ jobs:
           inlineScript: |
             az deployment sub what-if --location norwayeast \
               --name ${{ github.run_number }} \
-              --template-file az bicep build --file ./credless-in-azure-samples/part-5/infra/level-2/main.bicep \
+              --template-file --file ./credless-in-azure-samples/part-5/infra/level-2/main.bicep \
               --parameters ./credless-in-azure-samples/part-5/infra/level-2/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} acrName=placeholder authClientId=client-guid-1234 AzureAd__Instance=https://contoso.b2clogin.com/ AzureAd__Domain=contoso.onmicrosoft.com AzureAd__TenantId=tenant-guid-1234 AzureAd__ClientId=b2c-client-guid-1234
 
   Deploy:
@@ -89,7 +89,7 @@ jobs:
       run: |
         export appName=${{ github.event.inputs.appName }}            
         export replyUrl="https://${{ github.event.inputs.appName }}.placeholder.azurecontainerapps.io/.auth/login/aad/callback" 
-        appId=$(az ad app create --display-name $appName --reply-urls $replyUrl --query appId) 
+        appId=$(az ad app create --display-name $appName --query appId) 
         echo "::set-output name=appId::$appId"
   
     - name: 'Deploy Azure Container Registry'
@@ -144,7 +144,7 @@ jobs:
     - name: 'Update App Registration'
       run: |
         export replyUrl=${{ steps.getOutputs.outputs.replyUrl }}
-        az ad app update --id ${{ steps.appreg.outputs.appId }} --homepage "https://$replyUrl"  --reply-urls "https://$replyUrl/.auth/login/aad/callback"  
+        az ad app update --id ${{ steps.appreg.outputs.appId }} --web-home-page-url "https://$replyUrl"  --web-redirect-uris "https://$replyUrl/.auth/login/aad/callback"  
 
   Deploy-B2C:
     runs-on: ubuntu-latest
