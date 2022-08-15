@@ -72,7 +72,7 @@ jobs:
 
   Deploy:
     runs-on: ubuntu-latest
-    needs: validate
+    needs: What-if
     environment: ${{ github.event.inputs.environment }}
     steps:
     - uses: actions/checkout@v2
