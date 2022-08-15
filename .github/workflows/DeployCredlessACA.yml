@@ -106,7 +106,7 @@ jobs:
             --parameters ./credless-in-azure-samples/part-5/infra/level-1/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }}
 
     - name: 'Retrieve AcrName'
-      id: getACrName
+      id: getAcrName
       uses: azure/powershell@v1
       with:
         inlineScript: |
@@ -114,6 +114,21 @@ jobs:
           $acrName=$acrName.value
           echo "::set-output name=acrName::$acrName"
         azPSVersion: "latest"
+
+    - name: Build and push metadata container to ACR
+      run: |
+        cd ./credless-in-azure-samples/part-5/src/oidc-metadata
+        az acr build --registry ${{ steps.getAcrName.outputs.acrName }} --image oidc:${{ github.run_number }} .
+    
+    - name: Build and push susigen container to ACR
+      run: |
+        cd ./credless-in-azure-samples/part-5/src/susi-generator
+        az acr build --registry ${{ steps.getAcrName.outputs.acrName }} --image susigen:${{ github.run_number }} .
+
+    - name: Build and push metadata container to ACR
+      run: |
+        cd ./credless-in-azure-samples/part-5/src/b2c-susi-app
+        az acr build --registry ${{ steps.getAcrName.outputs.acrName }} --image b2csusiapp:${{ github.run_number }} .
 
     - name: 'Deploy Azure Container Environment, Apps and stuff'
       uses: azure/cli@v1      
@@ -123,7 +138,7 @@ jobs:
           az deployment sub create --location norwayeast \
             --name ${{ github.run_number }} \
             --template-file ./credless-in-azure-samples/part-5/infra/level-2/main.bicep \
-            --parameters ./credless-in-azure-samples/part-5/infra/level-2/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }} acrName=$acrName authClientId=${{ steps.appreg.outputs.appId }} AzureAd__Instance=https://${{ secrets.B2C_TENANT_NAME }} AzureAd__Domain=${{ secrets.B2C_TENANT_NAME }} AzureAd__TenantId=${{ secrets.B2C_AZURE_TENANT_ID }} AzureAd__ClientId=${{ secrets.B2C_AZURE_CLIENT_ID }}
+            --parameters ./credless-in-azure-samples/part-5/infra/level-2/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }} acrName=$acrName authClientId=${{ steps.appreg.outputs.appId }} AzureAd__Instance=https://${{ secrets.B2C_TENANT_NAME }} AzureAd__Domain=${{ secrets.B2C_TENANT_NAME }} AzureAd__TenantId=${{ secrets.B2C_AZURE_TENANT_ID }} AzureAd__ClientId=${{ secrets.B2C_AZURE_CLIENT_ID }} metadataContainerImage=oidc:${{ github.run_number }} susiGenContainerImage=susigen:${{ github.run_number }} b2csusiAppContainerImage=b2csusiapp:${{ github.run_number }}
 
     - name: 'Retrieve ReplyUrl'
       id: getReplyUrl
