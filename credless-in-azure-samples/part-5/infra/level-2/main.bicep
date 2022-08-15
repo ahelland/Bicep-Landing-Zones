@@ -16,7 +16,6 @@ param susiGenContainerImage string
 param b2csusiAppContainerImage string
 param aspEnvironment string
 param containerPort int
-param acrManagedIdentity string = 'None'
 
 //For role assignment of managed identity
 @description('Key Vault Secrets User role id')
@@ -34,14 +33,11 @@ param AzureAd__Domain string
 param AzureAd__TenantId string
 param AzureAd__ClientId string
 
+//
+param acrName string
+
 resource rg_kv 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: 'rg-${env}-kv-${appName}'
-  location: location
-  tags: resourceTags
-}
-
-resource rg_acr 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: 'rg-${env}-acr-${appName}'
   location: location
   tags: resourceTags
 }
@@ -52,8 +48,13 @@ resource rg_aca 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   tags: resourceTags
 }
 
+resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' existing = {
+  scope: resourceGroup('rg-${env}-acr-${appName}')
+  name: acrName
+}
+
 @description('Name needs to be less than 24 characters total.')
-module keyVault '../../../modules/azure-key-vault/key-vault.bicep' = {
+module keyVault '../../../../modules/azure-key-vault/key-vault.bicep' = {
   scope: rg_kv
   name: 'kv-${env}-${suffix}'
   params: {
@@ -64,30 +65,8 @@ module keyVault '../../../modules/azure-key-vault/key-vault.bicep' = {
   }
 }
 
-// ACR for images
-@minLength(5)
-@maxLength(50)
-@description('Provide a globally unique name of your Azure Container Registry')
-param acrName string = 'acr${uniqueString('rg-${env}-aks-acr')}'
-
-@description('Provide a tier of your Azure Container Registry.')
-param acrSku string = 'Basic'
-
-module acr './modules/container-registry.bicep' = {
-  scope: rg_acr
-  name: acrName
-  params: {
-    acrName: acrName
-    acrSku: acrSku
-    location: location
-    adminUserEnabled: true
-    anonymousPullEnabled: false
-    managedIdentity: acrManagedIdentity
-  }
-}
-
 //Azure Container Apps as runtime platform
-module containerAppEnvironment './modules/container-environment.bicep' = {
+module containerAppEnvironment '../modules/container-environment.bicep' = {
   scope: rg_aca
   name: 'container-app-environment'
   params: {
@@ -96,19 +75,19 @@ module containerAppEnvironment './modules/container-environment.bicep' = {
   }
 }
 
-module metadataContainerApp './modules/container-app.bicep' = {
+module metadataContainerApp '../modules/container-app.bicep' = {
   scope: rg_aca
   name: '${appName}-oidc'
   params: {
     managedIdentity: 'SystemAssigned'
     containerAppEnvironmentId: containerAppEnvironment.outputs.id
-    containerImage: '${acr.outputs.loginServer}/${metadataContainerImage}'
+    containerImage: '${acr.properties.loginServer}/${metadataContainerImage}'
     containerPort: containerPort
     location: location
     name: '${appName}-oidc'
-    registry: acr.outputs.loginServer
-    registryPassword: acr.outputs.password 
-    registryUsername: acr.outputs.admin
+    registry: acr.properties.loginServer
+    registryPassword: acr.listCredentials().passwords[0].value
+    registryUsername: acr.listCredentials().username
     useExternalIngress: true
     envVars: [
       {
@@ -140,20 +119,20 @@ module metadataContainerApp './modules/container-app.bicep' = {
 }
 
 // The token generator is secured with EasyAuth (separate module)
-module susiGenContainerApp './modules/container-app-easyauth.bicep' = {
+module susiGenContainerApp '../modules/container-app-easyauth.bicep' = {
   scope: rg_aca
   name: '${appName}-susigen'
   params: {    
     authClientId: authClientId        
     managedIdentity: 'SystemAssigned'
     containerAppEnvironmentId: containerAppEnvironment.outputs.id
-    containerImage: '${acr.outputs.loginServer}/${susiGenContainerImage}'
+    containerImage: '${acr.properties.loginServer}/${susiGenContainerImage}'
     containerPort: containerPort
     location: location
     name: '${appName}-susigen'
-    registry: acr.outputs.loginServer    
-    registryPassword: acr.outputs.password     
-    registryUsername: acr.outputs.admin
+    registry: acr.properties.loginServer    
+    registryPassword: acr.listCredentials().passwords[0].value
+    registryUsername: acr.listCredentials().username
     useExternalIngress: true
     envVars: [
       {
@@ -204,19 +183,19 @@ module susiGenContainerApp './modules/container-app-easyauth.bicep' = {
   }      
 }
 
-module b2csusiappContainerApp './modules/container-app.bicep' = {
+module b2csusiappContainerApp '../modules/container-app.bicep' = {
   scope: rg_aca
   name: '${appName}-b2csusiapp'
   params: {
     managedIdentity: 'SystemAssigned'
     containerAppEnvironmentId: containerAppEnvironment.outputs.id    
-    containerImage: '${acr.outputs.loginServer}/${b2csusiAppContainerImage}'
+    containerImage: '${acr.properties.loginServer}/${b2csusiAppContainerImage}'
     containerPort: containerPort
     location: location
     name: '${appName}-b2csusiapp'
-    registry: acr.outputs.loginServer    
-    registryPassword: acr.outputs.password     
-    registryUsername: acr.outputs.admin
+    registry: acr.properties.loginServer    
+    registryPassword: acr.listCredentials().passwords[0].value
+    registryUsername: acr.listCredentials().username
     useExternalIngress: true
     envVars: [
       {
@@ -280,3 +259,6 @@ module susigenKvRole 'roleAssignment.bicep' = {
     roleDefinitionId: secretUserRole
   }
 }
+
+output b2capp_url string    = b2csusiappContainerApp.outputs.fqdn
+output oidc_metadata string = metadataContainerApp.outputs.fqdn

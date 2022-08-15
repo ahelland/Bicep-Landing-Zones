@@ -11,6 +11,7 @@ resource roleAssigment 'Microsoft.Authorization/roleAssignments@2020-10-01-previ
   name: name
   scope: keyvault
   properties: {
+    principalType: 'ServicePrincipal'
     principalId: principalId
     roleDefinitionId: roleDefinitionId
   }
