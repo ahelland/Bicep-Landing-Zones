@@ -105,7 +105,7 @@ namespace susi_generator.Pages
 
         private string BuildIdToken(string Email)
         {
-            //string B2CClientId = configuration.GetSection("SuSiSettings")["B2CClientId"];
+            string B2CClientId = configuration.GetSection("SuSiSettings")["B2CClientId"];
             double.TryParse(configuration.GetSection("SuSiSettings")["LinkExpiresAfterMinutes"], out double LinkExpiresAfterMinutes);
 
             string issuer = configuration.GetSection("JWTSettings")["issuer"];
@@ -116,12 +116,12 @@ namespace susi_generator.Pages
             {
                 new System.Security.Claims.Claim("aud", audience, System.Security.Claims.ClaimValueTypes.String, issuer),
                 new System.Security.Claims.Claim("email", Email, System.Security.Claims.ClaimValueTypes.String, issuer)                
-            };
+            };            
 
             // Create the token
             JwtSecurityToken token = new(
                     issuer,
-                    //B2CClientId,
+                    B2CClientId,
                     claims,
                     DateTime.Now,
                     DateTime.Now.AddMinutes(LinkExpiresAfterMinutes),
