@@ -20,8 +20,8 @@ namespace susi_generator.Pages
 
         protected override void OnInitialized()
         {
-            string iss = configuration.GetSection("JWTSettings")["Issuer"];
-            string aud = configuration.GetSection("JWTSettings")["Audience"];
+            string iss = configuration.GetSection("JWTSettings")["issuer"];
+            string aud = configuration.GetSection("JWTSettings")["audience"];
             string sub = configuration.GetSection("SuSiSettings")["EmailAddress"];
 
             SigningCertThumbprint = configuration.GetSection("SuSiSettings")["SigningCertThumbprint"];
@@ -105,11 +105,11 @@ namespace susi_generator.Pages
 
         private string BuildIdToken(string Email)
         {
-            string B2CClientId = configuration.GetSection("SuSiSettings")["B2CClientId"];
+            //string B2CClientId = configuration.GetSection("SuSiSettings")["B2CClientId"];
             double.TryParse(configuration.GetSection("SuSiSettings")["LinkExpiresAfterMinutes"], out double LinkExpiresAfterMinutes);
 
-            string issuer = configuration.GetSection("SuSiSettings")["issuer"];
-            string audience = configuration.GetSection("SuSiSettings")["audience"];
+            string issuer = configuration.GetSection("JWTSettings")["issuer"];
+            string audience = configuration.GetSection("JWTSettings")["audience"];
 
             // All parameters sent to Azure AD B2C needs to be sent as claims
             IList<System.Security.Claims.Claim> claims = new List<System.Security.Claims.Claim>
@@ -121,7 +121,7 @@ namespace susi_generator.Pages
             // Create the token
             JwtSecurityToken token = new(
                     issuer,
-                    B2CClientId,
+                    //B2CClientId,
                     claims,
                     DateTime.Now,
                     DateTime.Now.AddMinutes(LinkExpiresAfterMinutes),

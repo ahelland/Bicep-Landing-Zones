@@ -235,4 +235,4 @@ jobs:
     - name: 'Update B2C App Registration'
       run: |
         export replyUrlB2C=${{ needs.Deploy.outputs.replyUrlB2C }}
-        az ad app update --id ${{ secrets.B2C_APP_CLIENT_ID }} --web-home-page-url "https://$replyUrlB2C"  --web-redirect-uris "https://$replyUrlB2C" 
+        az ad app update --id ${{ secrets.B2C_APP_CLIENT_ID }} --web-home-page-url "https://$replyUrlB2C/signin-oidc"  --web-redirect-uris "https://$replyUrlB2C/signin-oidc" 
