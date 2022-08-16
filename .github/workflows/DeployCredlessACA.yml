@@ -217,7 +217,7 @@ jobs:
         azPSVersion: "latest"
 
     - name: 'Retrieve B2C ReplyUrl'
-      id: getReplyUrl
+      id: getReplyUrlB2C
       uses: azure/powershell@v1
       with:
         inlineScript: |
@@ -228,5 +228,5 @@ jobs:
 
     - name: 'Update B2C App Registration'
       run: |
-        export replyUrl=${{ steps.getReplyUrl.outputs.replyUrlB2C }}
-        az ad app update --id {{ secrets.B2C_APP_CLIENT_ID }} --web-home-page-url "https://$replyUrlB2c"  --web-redirect-uris "https://$replyUrlB2C" 
+        export replyUrlB2C=${{ steps.getReplyUrlB2C.outputs.replyUrlB2C }}
+        az ad app update --id ${{ secrets.B2C_APP_CLIENT_ID }} --web-home-page-url "https://$replyUrlB2C"  --web-redirect-uris "https://$replyUrlB2C" 
