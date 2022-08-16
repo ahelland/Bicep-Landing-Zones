@@ -101,7 +101,8 @@ jobs:
       run: |
         az ad sp create --id ${{ steps.appreg.outputs.appId }} 
 
-    - name: 'Add Permissions'      
+    - name: 'Add Permissions'  
+      continue-on-error: true    
       run: |
         az ad app permission add --id ${{ steps.appreg.outputs.appId }} --api 00000003-0000-0000-c000-000000000000 --api-permissions e1fe6dd8-ba31-4d61-89e7-88639da4683d=Scope 
         az ad app permission grant --id ${{ steps.appreg.outputs.appId }} --api 00000003-0000-0000-c000-000000000000 --scope User.Read
@@ -155,7 +156,7 @@ jobs:
       uses: azure/powershell@v1
       with:
         inlineScript: |
-          $replyUrl=(az deployment sub show -n ${{ github.run_number }} | ConvertFrom-Json | foreach properties | foreach outputs | select -ExpandProperty 'b2capp_url')
+          $replyUrl=(az deployment sub show -n ${{ github.run_number }} | ConvertFrom-Json | foreach properties | foreach outputs | select -ExpandProperty 'susigen_url')
           $replyUrl=$replyUrl.value
           echo "::set-output name=replyUrl::$replyUrl"
         azPSVersion: "latest"
