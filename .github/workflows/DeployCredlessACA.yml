@@ -95,6 +95,16 @@ jobs:
         export replyUrl="https://${{ github.event.inputs.appName }}.placeholder.azurecontainerapps.io/.auth/login/aad/callback" 
         appId=$(az ad app create --display-name $appName --query appId) 
         echo "::set-output name=appId::$appId"
+
+    - name: 'Create Service Principal'
+      continue-on-error: true
+      run: |
+        az ad sp create --id ${{ steps.appreg.outputs.appId }} 
+               
+    - name: 'Add Permissions'      
+      run: |
+        az ad app permission add --id ${{ steps.appreg.outputs.appId }} --api 00000003-0000-0000-c000-000000000000 --api-permissions 311a71cc-e848-46a1-bdf8-97ff7156d8e6=Scope 
+        az ad app permission grant --id ${{ steps.appreg.outputs.appId }} --api 00000003-0000-0000-c000-000000000000 
   
     - name: 'Deploy Azure Container Registry'
       uses: azure/cli@v1      
