@@ -204,11 +204,11 @@ module b2csusiappContainerApp '../modules/container-app.bicep' = {
       }  
       {
         name: 'AzureAd__Instance'
-        value: AzureAd__Instance
+        value: '${AzureAd__Instance}.b2clogin.com'
       }
       {
         name: 'AzureAd__Domain'
-        value: AzureAd__Domain
+        value: '${AzureAd__Domain}.onmicrosoft.com'
       }
       {
         name: 'AzureAd__TenantId'
