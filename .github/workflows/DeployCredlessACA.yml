@@ -208,14 +208,13 @@ jobs:
           enable-AzPSSession: true
 
     - name: Replace placeholder values
-      run: |
-        export metadata=${{ needs.Deploy.outputs.metadata }}
+      run: |    
         sed -i 's|${B2C_TENANT_NAME}|${{ secrets.B2C_TENANT_NAME }}|g' ./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/TrustFrameworkBase.xml
         sed -i 's|${B2C_TENANT_NAME}|${{ secrets.B2C_TENANT_NAME }}|g' ./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/TrustFrameworkLocalization.xml
         sed -i 's|${B2C_TENANT_NAME}|${{ secrets.B2C_TENANT_NAME }}|g; s|${B2C_PROXY_IEF_APPID}|${{ secrets.B2C_PROXY_IEF_APPID }}|g; s|${B2C_IEF_APPID}|${{ secrets.B2C_IEF_APPID }}|g' ./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/TrustFrameworkExtensions.xml
         sed -i 's|${B2C_TENANT_NAME}|${{ secrets.B2C_TENANT_NAME }}|g' ./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/SignUpOrSignin.xml
-        sed -i 's|${B2C_TENANT_NAME}|${{ secrets.B2C_TENANT_NAME }}|g; s|${OIDC_METADATA_URL}|${{ needs.Deploy.outputs.metadata }}|g; s|${TOKEN_HINT_AUDIENCE}|contosob2c|g; s|${TOKEN_HINT_ISSUER}|https://contoso.com|g' ./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/Invitation_Link.xml
-        sed -i 's|${B2C_TENANT_NAME}|${{ secrets.B2C_TENANT_NAME }}|g; s|${OIDC_METADATA_URL}|${{ needs.Deploy.outputs.metadata }}|g; s|${TOKEN_HINT_AUDIENCE}|contosob2c|g; s|${TOKEN_HINT_ISSUER}|https://contoso.com|g' ./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/Signin_Link.xml
+        sed -i 's|${B2C_TENANT_NAME}|${{ secrets.B2C_TENANT_NAME }}|g; s|${OIDC_METADATA_URL}|https://${{ needs.Deploy.outputs.metadata }}/.well-known/openid-configuration|g; s|${TOKEN_HINT_AUDIENCE}|contosob2c|g; s|${TOKEN_HINT_ISSUER}|https://contoso.com|g' ./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/Invitation_Link.xml
+        sed -i 's|${B2C_TENANT_NAME}|${{ secrets.B2C_TENANT_NAME }}|g; s|${OIDC_METADATA_URL}|https://${{ needs.Deploy.outputs.metadata }}/.well-known/openid-configuration|g; s|${TOKEN_HINT_AUDIENCE}|contosob2c|g; s|${TOKEN_HINT_ISSUER}|https://contoso.com|g' ./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/Signin_Link.xml
         
     - name: 'Upload Custom Policies'
       uses: azure/powershell@v1
