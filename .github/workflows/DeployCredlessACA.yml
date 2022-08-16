@@ -171,6 +171,18 @@ jobs:
           echo "::set-output name=metadata::$metadata"
         azPSVersion: "latest"
 
+    # Reply url for B2C must be retrieved in the context of the resource sub, 
+    # with the app reg must be set in the B2C tenant context afterwards.
+    - name: 'Retrieve B2C ReplyUrl'
+      id: getReplyUrlB2C
+      uses: azure/powershell@v1
+      with:
+        inlineScript: |
+          $replyUrlB2C=(az deployment sub show -n ${{ github.run_number }} | ConvertFrom-Json | foreach properties | foreach outputs | select -ExpandProperty 'b2capp_url')
+          $replyUrlB2C=$replyUrlB2C.value
+          echo "::set-output name=replyUrlB2C::$replyUrlB2C"
+        azPSVersion: "latest"
+
     - name: 'Update App Registration'
       run: |
         export replyUrl=${{ steps.getReplyUrl.outputs.replyUrl }}
@@ -214,16 +226,6 @@ jobs:
           Set-MgTrustFrameworkPolicyContent -TrustFrameworkPolicyId "B2C_1A_Signup_Signin_GitHub" -InFile "./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/SignUpOrSignin.xml"
           Set-MgTrustFrameworkPolicyContent -TrustFrameworkPolicyId "B2C_1A_Invitation_Link_GitHub" -InFile "./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/Invitation_Link.xml"
           Set-MgTrustFrameworkPolicyContent -TrustFrameworkPolicyId "B2C_1A_Signin_Link_GitHub" -InFile "./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/Signin_Link.xml"
-        azPSVersion: "latest"
-
-    - name: 'Retrieve B2C ReplyUrl'
-      id: getReplyUrlB2C
-      uses: azure/powershell@v1
-      with:
-        inlineScript: |
-          $replyUrlB2C=(az deployment sub show -n ${{ github.run_number }} | ConvertFrom-Json | foreach properties | foreach outputs | select -ExpandProperty 'b2capp_url')
-          $replyUrlB2C=$replyUrlB2C.value
-          echo "::set-output name=replyUrlB2C::$replyUrlB2C"
         azPSVersion: "latest"
 
     - name: 'Update B2C App Registration'
