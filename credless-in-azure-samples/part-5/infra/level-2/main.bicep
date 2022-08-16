@@ -262,3 +262,4 @@ module susigenKvRole 'roleAssignment.bicep' = {
 
 output b2capp_url string    = b2csusiappContainerApp.outputs.fqdn
 output oidc_metadata string = metadataContainerApp.outputs.fqdn
+output susigen_url string   = susiGenContainerApp.outputs.fqdn
