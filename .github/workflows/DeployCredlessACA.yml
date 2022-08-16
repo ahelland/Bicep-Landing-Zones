@@ -149,7 +149,7 @@ jobs:
           az deployment sub create --location norwayeast \
             --name ${{ github.run_number }} \
             --template-file ./credless-in-azure-samples/part-5/infra/level-2/main.bicep \
-            --parameters ./credless-in-azure-samples/part-5/infra/level-2/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }} acrName=$acrName authClientId=${{ steps.appreg.outputs.appId }} AzureAd__Instance=https://${{ secrets.B2C_TENANT_NAME }} AzureAd__Domain=${{ secrets.B2C_TENANT_NAME }} AzureAd__TenantId=${{ secrets.B2C_AZURE_TENANT_ID }} AzureAd__ClientId=${{ secrets.B2C_AZURE_CLIENT_ID }} metadataContainerImage=oidc:${{ github.run_number }} susiGenContainerImage=susigen:${{ github.run_number }} b2csusiAppContainerImage=b2csusiapp:${{ github.run_number }}
+            --parameters ./credless-in-azure-samples/part-5/infra/level-2/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }} acrName=$acrName authClientId=${{ steps.appreg.outputs.appId }} AzureAd__Instance=https://${{ secrets.B2C_TENANT_NAME }} AzureAd__Domain=${{ secrets.B2C_TENANT_NAME }} AzureAd__TenantId=${{ secrets.B2C_AZURE_TENANT_ID }} AzureAd__ClientId=${{ secrets.B2C_APP_CLIENT_ID }} metadataContainerImage=oidc:${{ github.run_number }} susiGenContainerImage=susigen:${{ github.run_number }} b2csusiAppContainerImage=b2csusiapp:${{ github.run_number }}
 
     - name: 'Retrieve ReplyUrl'
       id: getReplyUrl
@@ -214,4 +214,19 @@ jobs:
           Set-MgTrustFrameworkPolicyContent -TrustFrameworkPolicyId "B2C_1A_Signup_Signin_GitHub" -InFile "./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/SignUpOrSignin.xml"
           Set-MgTrustFrameworkPolicyContent -TrustFrameworkPolicyId "B2C_1A_Invitation_Link_GitHub" -InFile "./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/Invitation_Link.xml"
           Set-MgTrustFrameworkPolicyContent -TrustFrameworkPolicyId "B2C_1A_Signin_Link_GitHub" -InFile "./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/Signin_Link.xml"
-        azPSVersion: "latest"  
+        azPSVersion: "latest"
+
+    - name: 'Retrieve B2C ReplyUrl'
+      id: getReplyUrl
+      uses: azure/powershell@v1
+      with:
+        inlineScript: |
+          $replyUrlB2C=(az deployment sub show -n ${{ github.run_number }} | ConvertFrom-Json | foreach properties | foreach outputs | select -ExpandProperty 'b2capp_url')
+          $replyUrlB2C=$replyUrlB2C.value
+          echo "::set-output name=replyUrlB2C::$replyUrlB2C"
+        azPSVersion: "latest"
+
+    - name: 'Update B2C App Registration'
+      run: |
+        export replyUrl=${{ steps.getReplyUrl.outputs.replyUrlB2C }}
+        az ad app update --id {{ secrets.B2C_APP_CLIENT_ID }} --web-home-page-url "https://$replyUrlB2c"  --web-redirect-uris "https://$replyUrlB2C" 
