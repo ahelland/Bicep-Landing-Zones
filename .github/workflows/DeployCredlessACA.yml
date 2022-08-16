@@ -78,6 +78,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: What-if
     environment: ${{ github.event.inputs.environment }}
+    outputs:
+      replyUrlB2C: ${{ steps.getReplyUrlB2C.outputs.replyUrlB2C }}
     steps:
     - uses: actions/checkout@v2
     
@@ -230,5 +232,5 @@ jobs:
 
     - name: 'Update B2C App Registration'
       run: |
-        export replyUrlB2C=${{ jobs.deploy.steps.getReplyUrlB2C.outputs.replyUrlB2C }}
+        export replyUrlB2C=${{ needs.Deploy.outputs.replyUrlB2C }}
         az ad app update --id ${{ secrets.B2C_APP_CLIENT_ID }} --web-home-page-url "https://$replyUrlB2C"  --web-redirect-uris "https://$replyUrlB2C" 
