@@ -115,8 +115,8 @@ namespace susi_generator.Pages
             IList<System.Security.Claims.Claim> claims = new List<System.Security.Claims.Claim>
             {
                 new System.Security.Claims.Claim("aud", audience, System.Security.Claims.ClaimValueTypes.String, issuer),
-                new System.Security.Claims.Claim("email", Email, System.Security.Claims.ClaimValueTypes.String, issuer)                
-            };            
+                new System.Security.Claims.Claim("email", Email, System.Security.Claims.ClaimValueTypes.String, issuer)
+            };
 
             // Create the token
             JwtSecurityToken token = new(

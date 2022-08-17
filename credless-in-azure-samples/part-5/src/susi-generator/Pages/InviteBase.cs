@@ -20,8 +20,8 @@ namespace susi_generator.Pages
 
         protected override void OnInitialized()
         {
-            string iss = configuration.GetSection("JWTSettings")["Issuer"];
-            string aud = configuration.GetSection("JWTSettings")["Audience"];
+            string iss = configuration.GetSection("JWTSettings")["issuer"];
+            string aud = configuration.GetSection("JWTSettings")["audience"];
             string sub = configuration.GetSection("SuSiSettings")["EmailAddress"];
 
             SigningCertThumbprint = configuration.GetSection("SuSiSettings")["SigningCertThumbprint"];
@@ -76,7 +76,7 @@ namespace susi_generator.Pages
                     //Fallback to file system if local Linux
                     else
                     {
-                        bytes = System.IO.File.ReadAllBytes($"/var/ssl/private/{SigningCertThumbprint}.p12");
+                        bytes = File.ReadAllBytes($"/var/ssl/private/{SigningCertThumbprint}.p12");
                     }
 
                     var cert = new X509Certificate2(bytes);
@@ -106,13 +106,14 @@ namespace susi_generator.Pages
             string link = BuildUrl(token);
             output = link;
         }
+
         private string BuildIdToken(string Email)
         {
             string B2CClientId = configuration.GetSection("SuSiSettings")["B2CClientId"];
             double.TryParse(configuration.GetSection("SuSiSettings")["LinkExpiresAfterMinutes"], out double LinkExpiresAfterMinutes);
 
-            string issuer = configuration.GetSection("SuSiSettings")["issuer"];
-            string audience = configuration.GetSection("SuSiSettings")["audience"];
+            string issuer = configuration.GetSection("JWTSettings")["issuer"];
+            string audience = configuration.GetSection("JWTSettings")["audience"];
 
             // All parameters sent to Azure AD B2C needs to be sent as claims
             IList<System.Security.Claims.Claim> claims = new List<System.Security.Claims.Claim>
