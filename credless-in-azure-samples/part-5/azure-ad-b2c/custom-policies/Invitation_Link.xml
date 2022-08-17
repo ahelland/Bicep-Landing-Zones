@@ -67,7 +67,6 @@
           <DisplayName> My ID Token Hint TechnicalProfile</DisplayName>
           <Protocol Name="None" />
           <Metadata>
-            <!--Sample action required: replace with your endpoint location -->
             <Item Key="METADATA">${OIDC_METADATA_URL}</Item>             
             <Item Key="IdTokenAudience">${TOKEN_HINT_AUDIENCE}</Item>
             <Item Key="issuer">${TOKEN_HINT_ISSUER}</Item>
@@ -208,7 +207,7 @@
         <OutputClaim ClaimTypeReferenceId="givenName" PartnerClaimType="givenName" />
         <OutputClaim ClaimTypeReferenceId="surname" PartnerClaimType="family_name" />
         <OutputClaim ClaimTypeReferenceId="email" />
-        <OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="sub"/>
+        <OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="sub" />
         <OutputClaim ClaimTypeReferenceId="tenantId" AlwaysUseDefaultValue="true" DefaultValue="{Policy:TenantObjectId}" />
       </OutputClaims>
       <SubjectNamingInfo ClaimType="sub" />

@@ -12,8 +12,7 @@
     <TenantId>${B2C_TENANT_NAME}.onmicrosoft.com</TenantId>
     <PolicyId>B2C_1A_TrustFrameworkLocalization_GitHub</PolicyId>
   </BasePolicy>
- <BuildingBlocks>
-
+  <BuildingBlocks>
   </BuildingBlocks>
 
   <ClaimsProviders>
@@ -30,7 +29,6 @@
         </TechnicalProfile>
       </TechnicalProfiles>
     </ClaimsProvider>
-
 
     <ClaimsProvider>
       <DisplayName>Local Account SignIn</DisplayName>
@@ -49,9 +47,5 @@
     </ClaimsProvider>
 
   </ClaimsProviders>
-
-    <!--UserJourneys>
-	
-	</UserJourneys-->
 
 </TrustFrameworkPolicy>
