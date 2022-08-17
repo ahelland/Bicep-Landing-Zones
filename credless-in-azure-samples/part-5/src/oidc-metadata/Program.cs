@@ -30,6 +30,31 @@ app.MapGet("/.well-known/openid-configuration", (HttpContext httpContext) =>
 })
 .WithName("openid-configuration");
 
+app.MapGet(".well-known/openid-configuration-b2c", (HttpContext httpContext) =>
+{
+    var instance = builder.Configuration.GetSection("AzureAD")["Instance"];
+    var domain = builder.Configuration.GetSection("AzureAD")["Domain"];
+
+    var metadata = new B2CModel
+    {
+        Issuer = builder.Configuration.GetSection("JWTSettings")["Issuer"],
+        AuthorizationEndpoint = $"{instance}/{domain}/oauth2/v2.0/authorize?p=b2c_1a_signin_link_github",
+        TokenEndpoint = $"{instance}/{domain}/oauth2/v2.0/token?p=b2c_1a_signin_link_github",
+        EndSessionEndpoint = $"{instance}/{domain}/oauth2/v2.0/logout?p=b2c_1a_signin_link_github",
+        ResponseModesSupported = new[] { "query", "fragment", "form_post" },
+        ResponseTypesSupported = new[] { "code", "code id_token", "code token", "code id_token token", "id_token", "id_token token", "token", "token id_token" },
+        ScopesSupported = new[] { "openid" },
+        SubjectTypesSupported = new[] { "pairwise" },
+        JwksUri = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}/.well-known/keys",
+        TokenEndpointAuthModesSupported = new[] { "client_secret_post", "client_secret_basic" },
+        IdTokenSigningAlgValuesSupported = new[] { builder.Configuration.GetSection("JWTSettings")["SigningCertAlgorithm"], },
+        ClaimsSupported = new[] { "name", "given_name", "family_name", "email", "sub", "idp", "Role", "iss", "iat", "exp", "aud", "acr", "nonce", "auth_time" }
+    };
+
+    return metadata;
+})
+.WithName("openid-configuration-b2c");
+
 app.MapGet("/.well-known/keys", (HttpContext httpContext) =>
 {
     var SigningCertThumbprint = builder.Configuration.GetSection("JWTSettings")["SigningCertThumbprint"];
