@@ -1,5 +1,6 @@
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.IdentityModel.Tokens;
 using oidc_metadata;
 using System.Security.Cryptography.X509Certificates;
@@ -120,7 +121,8 @@ app.MapGet("/.well-known/keys", (HttpContext httpContext) =>
     if (SigningCredentials == null)
         return null;
 
-    JwksKeyModel[] keys = new[] { JwksKeyModel.FromSigningCredentials(SigningCredentials.Value) };
+    JwksKeyModel key = JwksKeyModel.FromSigningCredentials(SigningCredentials.Value);
+    var keys = new JWKSModel { Keys = new[] { key } };
 
     return keys;
 })

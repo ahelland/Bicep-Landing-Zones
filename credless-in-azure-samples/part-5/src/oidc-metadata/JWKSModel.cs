@@ -30,7 +30,6 @@ namespace oidc_metadata
         public string Alg { get; set; }
 
         [JsonPropertyName("x5c")]
-
         public ICollection<string> X5C { get; set; }
 
         [JsonPropertyName("x5t")]
