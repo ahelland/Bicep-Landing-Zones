@@ -142,7 +142,7 @@ namespace susi_generator.Pages
 
         private string BuildUrl(string token)
         {
-            string B2CSignUpUrl = configuration.GetSection("SuSiSettings")["B2CSignUpUrlBase"];
+            string B2CSignUpUrl    = configuration.GetSection("SuSiSettings")["B2CSignUpUrlBase"];
             string B2CSignUpPolicy = configuration.GetSection("SuSiSettings")["B2CSignUpPolicy"];
 
             return $"{B2CSignUpUrl}/MicrosoftIdentity/Account/SignIn?tokenHint={token}&policy={B2CSignUpPolicy}";
