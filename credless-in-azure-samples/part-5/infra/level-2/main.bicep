@@ -220,7 +220,7 @@ module b2csusiappContainerApp '../modules/container-app.bicep' = {
       }
       {
         name: 'AzureAd__SignUpSignInPolicyId'
-        value: 'B2C_1A_SIGNIN_LINK_GITHUB'
+        value: 'B2C_1A_SIGNUP_SIGNIN_GITHUB'
       }
     ]
   }
