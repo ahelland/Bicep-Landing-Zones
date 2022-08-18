@@ -109,6 +109,7 @@ jobs:
     - name: 'Add Permissions to B2C Client App'  
       continue-on-error: true    
       run: |
+        sleep 20
         az ad app permission grant --id ${{ steps.appregb2c.outputs.appId }} --api 00000003-0000-0000-c000-000000000000 --scope "openid offline_access"
 
   Deploy:
