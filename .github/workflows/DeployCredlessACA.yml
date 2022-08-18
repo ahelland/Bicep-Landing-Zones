@@ -163,7 +163,7 @@ jobs:
       with:
         inlineScript: |
           # User.Read
-          Add-AzADAppPermission -ApplicationId ${{ steps.appregb2c.outputs.appId }} -ApiId "00000003-0000-0000-c000-000000000000" -PermissionId "e1fe6dd8-ba31-4d61-89e7-88639da4683d" -Type "Scope"          
+          Add-AzADAppPermission -ApplicationId ${{ steps.appreg.outputs.appId }} -ApiId "00000003-0000-0000-c000-000000000000" -PermissionId "e1fe6dd8-ba31-4d61-89e7-88639da4683d" -Type "Scope"          
         azPSVersion: "latest"
 
     - name: 'Deploy Azure Container Registry'
