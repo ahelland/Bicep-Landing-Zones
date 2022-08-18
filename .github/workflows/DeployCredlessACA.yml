@@ -17,7 +17,7 @@ permissions:
       contents: read
       
 jobs: 
-  lint:
+  Lint:
     name: Lint code
     runs-on: ubuntu-latest
     steps:
@@ -28,7 +28,7 @@ jobs:
 
   Validate:
     runs-on: ubuntu-latest
-    needs: lint
+    needs: Lint
     environment: ${{ github.event.inputs.environment }}
     steps:
       - uses: actions/checkout@v2
@@ -74,9 +74,46 @@ jobs:
               --template-file ./credless-in-azure-samples/part-5/infra/level-2/main.bicep \
               --parameters ./credless-in-azure-samples/part-5/infra/level-2/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} acrName=placeholder authClientId=client-guid-1234 AzureAd__Instance=https://contoso.b2clogin.com/ AzureAd__Domain=contoso.onmicrosoft.com AzureAd__TenantId=tenant-guid-1234 AzureAd__ClientId=b2c-client-guid-1234
 
-  Deploy:
+  # A app registration for B2C needs to exist to deploy the B2C SuSi app.
+  # Reply url will have to be configured after containers have been deployed.
+  B2C-App-Registration:
     runs-on: ubuntu-latest
     needs: What-if
+    environment: ${{ github.event.inputs.environment }}
+    outputs:
+      appId: ${{ steps.appregb2c.outputs.appId }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: 'Az CLI login'
+      uses: azure/login@v1
+      with:
+          client-id: ${{ secrets.B2C_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.B2C_AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+          enable-AzPSSession: true  
+
+    - name: Create Azure AD B2C App Registration
+      id: appregb2c
+      run: |
+        export appName=${{ github.event.inputs.appName }}            
+        appId=$(az ad app create --display-name $appName --query appId) 
+        echo "::set-output name=appId::$appId"
+
+    - name: 'Create B2C Service Principal'
+      continue-on-error: true
+      run: |
+        az ad sp create --id ${{ steps.appregb2c.outputs.appId }} 
+
+    - name: 'Add Permissions to B2C Client App'  
+      continue-on-error: true    
+      run: |
+        az ad app permission grant --id ${{ steps.appregb2c.outputs.appId }} --api 00000003-0000-0000-c000-000000000000 --scope "openid offline_access"
+
+  Deploy:
+    runs-on: ubuntu-latest
+    needs: B2C-App-Registration
     environment: ${{ github.event.inputs.environment }}
     outputs:
       replyUrlB2C: ${{ steps.getReplyUrlB2C.outputs.replyUrlB2C }}
@@ -153,7 +190,7 @@ jobs:
           az deployment sub create --location norwayeast \
             --name ${{ github.run_number }} \
             --template-file ./credless-in-azure-samples/part-5/infra/level-2/main.bicep \
-            --parameters ./credless-in-azure-samples/part-5/infra/level-2/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }} acrName=$acrName authClientId=${{ steps.appreg.outputs.appId }} AzureAd__Instance=https://${{ secrets.B2C_TENANT_NAME }} AzureAd__Domain=${{ secrets.B2C_TENANT_NAME }} AzureAd__TenantId=${{ secrets.B2C_AZURE_TENANT_ID }} AzureAd__ClientId=${{ secrets.B2C_APP_CLIENT_ID }} metadataContainerImage=oidc:${{ github.run_number }} susiGenContainerImage=susigen:${{ github.run_number }} b2csusiAppContainerImage=b2csusiapp:${{ github.run_number }}
+            --parameters ./credless-in-azure-samples/part-5/infra/level-2/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }} acrName=$acrName authClientId=${{ steps.appreg.outputs.appId }} AzureAd__Instance=https://${{ secrets.B2C_TENANT_NAME }} AzureAd__Domain=${{ secrets.B2C_TENANT_NAME }} AzureAd__TenantId=${{ secrets.B2C_AZURE_TENANT_ID }} AzureAd__ClientId=${{ needs.B2C-App-Registration.appregb2c.appId }} metadataContainerImage=oidc:${{ github.run_number }} susiGenContainerImage=susigen:${{ github.run_number }} b2csusiAppContainerImage=b2csusiapp:${{ github.run_number }}
 
     - name: 'Retrieve ReplyUrl'
       id: getReplyUrl
@@ -205,24 +242,7 @@ jobs:
           client-id: ${{ secrets.B2C_AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.B2C_AZURE_TENANT_ID }}
           allow-no-subscriptions: true
-          enable-AzPSSession: true
-
-    - name: Create Azure AD B2C App Registration
-      id: appregb2c
-      run: |
-        export appName=${{ github.event.inputs.appName }}            
-        appId=$(az ad app create --display-name $appName --query appId) 
-        echo "::set-output name=appId::$appId"
-
-    - name: 'Create B2C Service Principal'
-      continue-on-error: true
-      run: |
-        az ad sp create --id ${{ steps.appregb2c.outputs.appId }} 
-
-    - name: 'Add Permissions to B2C Client App'  
-      continue-on-error: true    
-      run: |
-        az ad app permission grant --id ${{ steps.appregb2c.outputs.appId }} --api 00000003-0000-0000-c000-000000000000 --scope "openid offline_access"
+          enable-AzPSSession: true    
 
     - name: Replace placeholder values
       run: |    
@@ -252,4 +272,4 @@ jobs:
     - name: 'Update B2C App Registration'
       run: |
         export replyUrlB2C=${{ needs.Deploy.outputs.replyUrlB2C }}
-        az ad app update --id ${{ steps.appregb2c.outputs.appId }}  --web-redirect-uris "https://$replyUrlB2C/signin-oidc" --enable-id-token-issuance true
+        az ad app update --id ${{ needs.B2C-App-Registration.appregb2c.appId }}  --web-redirect-uris "https://$replyUrlB2C/signin-oidc" --enable-id-token-issuance true
