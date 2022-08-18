@@ -81,7 +81,7 @@ jobs:
     needs: What-if
     environment: ${{ github.event.inputs.environment }}
     outputs:
-      appId: ${{ steps.appregb2c.outputs.appId }}
+      appIdB2C: ${{ steps.appregb2c.outputs.appId }}
 
     steps:
     - uses: actions/checkout@v2
@@ -128,6 +128,7 @@ jobs:
     outputs:
       replyUrlB2C: ${{ steps.getReplyUrlB2C.outputs.replyUrlB2C }}
       metadata:    ${{ steps.getMetadataUrl.outputs.metadata }}
+      appIdB2C:    ${{ steps.getAppregB2C.outputs.appIdB2C }}
     
     steps:
     - uses: actions/checkout@v2
@@ -146,6 +147,12 @@ jobs:
         export appName=${{ github.event.inputs.appName }}                    
         appId=$(az ad app create --display-name $appName --query appId) 
         echo "::set-output name=appId::$appId"
+
+    - name: Passthrough variable
+      id: getAppregB2C
+      run: |
+        export appIdB2C=${{ needs.B2C-App-Registration.outputs.appIdB2C }}
+        echo "::set-output name=appIdB2C::$appIdB2C"
 
     - name: 'Create Service Principal'
       continue-on-error: true
@@ -290,5 +297,5 @@ jobs:
     - name: 'Update B2C App Registration'
       run: |
         export replyUrlB2C=${{ needs.Deploy.outputs.replyUrlB2C }}
-        export appId=${{ needs.B2C-App-Registration.outputs.appId }}
+        export appId=${{ needs.Deploy.outputs.appIdB2C }}
         az ad app update --id $appId  --web-redirect-uris "https://$replyUrlB2C/signin-oidc" --enable-id-token-issuance true
