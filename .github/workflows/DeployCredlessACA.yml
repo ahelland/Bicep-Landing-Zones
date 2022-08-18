@@ -106,11 +106,20 @@ jobs:
       run: |
         az ad sp create --id ${{ steps.appregb2c.outputs.appId }} 
 
-    - name: 'Add Permissions to B2C Client App'  
-      continue-on-error: true    
-      run: |
-        sleep 20
-        az ad app permission grant --id ${{ steps.appregb2c.outputs.appId }} --api 00000003-0000-0000-c000-000000000000 --scope "openid offline_access"
+    #- name: 'Add Permissions to B2C Client App'  
+    #  continue-on-error: true    
+    #  run: |        
+    #    az ad app permission grant --id ${{ steps.appregb2c.outputs.appId }} --api 00000003-0000-0000-c000-000000000000 --scope "openid offline_access"
+
+    - name: 'Add Permissions to B2C Client App'
+      uses: azure/powershell@v1
+      with:
+        inlineScript: |
+          # openid
+          Add-AzADAppPermission -ObjectId ${{ steps.appregb2c.outputs.appId }} -ApiId "00000003-0000-0000-c000-000000000000" -PermissionId "37f7f235-527c-4136-accd-4a02d197296e" -Type "Scope"
+          # offline_access"
+          Add-AzADAppPermission -ObjectId ${{ steps.appregb2c.outputs.appId }} -ApiId "00000003-0000-0000-c000-000000000000" -PermissionId "7427e0e9-2fba-42fe-b0c0-848c9e6a8182" -Type "Scope"          
+        azPSVersion: "latest"
 
   Deploy:
     runs-on: ubuntu-latest
@@ -273,4 +282,4 @@ jobs:
     - name: 'Update B2C App Registration'
       run: |
         export replyUrlB2C=${{ needs.Deploy.outputs.replyUrlB2C }}
-        az ad app update --id ${{ needs.B2C-App-Registration.appregb2c.appId }}  --web-redirect-uris "https://$replyUrlB2C/signin-oidc" --enable-id-token-issuance true
+        az ad app update --id ${{ needs.B2C-App-Registration.outputs.appId }}  --web-redirect-uris "https://$replyUrlB2C/signin-oidc" --enable-id-token-issuance true
