@@ -142,8 +142,7 @@ jobs:
     - name: Create Azure AD App Registration
       id: appreg
       run: |
-        export appName=${{ github.event.inputs.appName }}            
-        # export replyUrl="https://${{ github.event.inputs.appName }}.placeholder.azurecontainerapps.io/.auth/login/aad/callback" 
+        export appName=${{ github.event.inputs.appName }}                    
         appId=$(az ad app create --display-name $appName --query appId) 
         echo "::set-output name=appId::$appId"
 
@@ -162,6 +161,8 @@ jobs:
       uses: azure/powershell@v1
       with:
         inlineScript: |
+          $token = Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com/"          
+          Connect-MgGraph -AccessToken $token.Token
           # User.Read
           Add-AzADAppPermission -ApplicationId ${{ steps.appreg.outputs.appId }} -ApiId "00000003-0000-0000-c000-000000000000" -PermissionId "e1fe6dd8-ba31-4d61-89e7-88639da4683d" -Type "Scope"          
         azPSVersion: "latest"
