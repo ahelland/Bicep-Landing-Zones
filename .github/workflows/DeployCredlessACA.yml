@@ -301,4 +301,4 @@ jobs:
       run: |
         export replyUrlB2C=${{ needs.Deploy.outputs.replyUrlB2C }}
         export appId=${{ needs.Deploy.outputs.appIdB2C }}
-        az ad app update --id $appId  --web-redirect-uris "https://$replyUrlB2C/signin-oidc" --enable-id-token-issuance true
+        az ad app update --id $appId  --web-redirect-uris "https://$replyUrlB2C/signin-oidc" --enable-id-token-issuance true --enable-access-token-issuance true
