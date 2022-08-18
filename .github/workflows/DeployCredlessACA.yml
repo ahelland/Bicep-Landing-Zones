@@ -106,6 +106,7 @@ jobs:
       run: |
         az ad sp create --id ${{ steps.appregb2c.outputs.appId }} 
 
+    # az cli seems to have a bug, so it's not working.
     #- name: 'Add Permissions to B2C Client App'  
     #  continue-on-error: true    
     #  run: |        
@@ -148,6 +149,7 @@ jobs:
         appId=$(az ad app create --display-name $appName --query appId) 
         echo "::set-output name=appId::$appId"
 
+    # Seems variables can only be passed between two adjacent steps, so we need to pass through.
     - name: Passthrough variable
       id: getAppregB2C
       run: |
@@ -159,6 +161,7 @@ jobs:
       run: |
         az ad sp create --id ${{ steps.appreg.outputs.appId }} 
 
+    # az cli seems to have a bug, so it's not working.
     #- name: 'Add Permissions'  
     #  continue-on-error: true    
     #  run: |
@@ -215,7 +218,7 @@ jobs:
           az deployment sub create --location norwayeast \
             --name ${{ github.run_number }} \
             --template-file ./credless-in-azure-samples/part-5/infra/level-2/main.bicep \
-            --parameters ./credless-in-azure-samples/part-5/infra/level-2/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }} acrName=$acrName authClientId=${{ steps.appreg.outputs.appId }} AzureAd__Instance=https://${{ secrets.B2C_TENANT_NAME }} AzureAd__Domain=${{ secrets.B2C_TENANT_NAME }} AzureAd__TenantId=${{ secrets.B2C_AZURE_TENANT_ID }} AzureAd__ClientId=${{ needs.B2C-App-Registration.appregb2c.appId }} metadataContainerImage=oidc:${{ github.run_number }} susiGenContainerImage=susigen:${{ github.run_number }} b2csusiAppContainerImage=b2csusiapp:${{ github.run_number }}
+            --parameters ./credless-in-azure-samples/part-5/infra/level-2/azuredeploy.${{ github.event.inputs.environment }}.parameters.json env=${{ github.event.inputs.environment }} appName=${{ github.event.inputs.appName }} acrName=$acrName authClientId=${{ steps.appreg.outputs.appId }} AzureAd__Instance=https://${{ secrets.B2C_TENANT_NAME }} AzureAd__Domain=${{ secrets.B2C_TENANT_NAME }} AzureAd__TenantId=${{ secrets.B2C_AZURE_TENANT_ID }} AzureAd__ClientId=${{ needs.B2C-App-Registration.outputs.appIdB2C }} metadataContainerImage=oidc:${{ github.run_number }} susiGenContainerImage=susigen:${{ github.run_number }} b2csusiAppContainerImage=b2csusiapp:${{ github.run_number }}
 
     - name: 'Retrieve ReplyUrl'
       id: getReplyUrl
@@ -238,7 +241,7 @@ jobs:
         azPSVersion: "latest"
 
     # Reply url for B2C must be retrieved in the context of the resource sub, 
-    # with the app reg must be set in the B2C tenant context afterwards.
+    # while the app reg must be set in the B2C tenant context afterwards.
     - name: 'Retrieve B2C ReplyUrl'
       id: getReplyUrlB2C
       uses: azure/powershell@v1
