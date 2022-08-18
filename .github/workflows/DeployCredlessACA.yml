@@ -152,12 +152,20 @@ jobs:
       run: |
         az ad sp create --id ${{ steps.appreg.outputs.appId }} 
 
-    - name: 'Add Permissions'  
-      continue-on-error: true    
-      run: |
-        az ad app permission add --id ${{ steps.appreg.outputs.appId }} --api 00000003-0000-0000-c000-000000000000 --api-permissions e1fe6dd8-ba31-4d61-89e7-88639da4683d=Scope 
-        az ad app permission grant --id ${{ steps.appreg.outputs.appId }} --api 00000003-0000-0000-c000-000000000000 --scope User.Read
+    #- name: 'Add Permissions'  
+    #  continue-on-error: true    
+    #  run: |
+    #    az ad app permission add --id ${{ steps.appreg.outputs.appId }} --api 00000003-0000-0000-c000-000000000000 --api-permissions e1fe6dd8-ba31-4d61-89e7-88639da4683d=Scope 
+    #    az ad app permission grant --id ${{ steps.appreg.outputs.appId }} --api 00000003-0000-0000-c000-000000000000 --scope User.Read
   
+    - name: 'Add Permissions'
+      uses: azure/powershell@v1
+      with:
+        inlineScript: |
+          # User.Read
+          Add-AzADAppPermission -ApplicationId ${{ steps.appregb2c.outputs.appId }} -ApiId "00000003-0000-0000-c000-000000000000" -PermissionId "e1fe6dd8-ba31-4d61-89e7-88639da4683d" -Type "Scope"          
+        azPSVersion: "latest"
+
     - name: 'Deploy Azure Container Registry'
       uses: azure/cli@v1      
       with:
@@ -282,4 +290,5 @@ jobs:
     - name: 'Update B2C App Registration'
       run: |
         export replyUrlB2C=${{ needs.Deploy.outputs.replyUrlB2C }}
-        az ad app update --id ${{ needs.B2C-App-Registration.outputs.appId }}  --web-redirect-uris "https://$replyUrlB2C/signin-oidc" --enable-id-token-issuance true
+        export appId=${{ needs.B2C-App-Registration.outputs.appId }}
+        az ad app update --id $appId  --web-redirect-uris "https://$replyUrlB2C/signin-oidc" --enable-id-token-issuance true
