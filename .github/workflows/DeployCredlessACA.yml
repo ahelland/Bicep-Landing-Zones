@@ -96,7 +96,7 @@ jobs:
       id: appreg
       run: |
         export appName=${{ github.event.inputs.appName }}            
-        export replyUrl="https://${{ github.event.inputs.appName }}.placeholder.azurecontainerapps.io/.auth/login/aad/callback" 
+        # export replyUrl="https://${{ github.event.inputs.appName }}.placeholder.azurecontainerapps.io/.auth/login/aad/callback" 
         appId=$(az ad app create --display-name $appName --query appId) 
         echo "::set-output name=appId::$appId"
 
@@ -207,6 +207,23 @@ jobs:
           allow-no-subscriptions: true
           enable-AzPSSession: true
 
+    - name: Create Azure AD B2C App Registration
+      id: appregb2c
+      run: |
+        export appName=${{ github.event.inputs.appName }}            
+        appId=$(az ad app create --display-name $appName --query appId) 
+        echo "::set-output name=appId::$appId"
+
+    - name: 'Create B2C Service Principal'
+      continue-on-error: true
+      run: |
+        az ad sp create --id ${{ steps.appregb2c.outputs.appId }} 
+
+    - name: 'Add Permissions to B2C Client App'  
+      continue-on-error: true    
+      run: |
+        az ad app permission grant --id ${{ steps.appregb2c.outputs.appId }} --api 00000003-0000-0000-c000-000000000000 --scope "openid offline_access"
+
     - name: Replace placeholder values
       run: |    
         sed -i 's|${B2C_TENANT_NAME}|${{ secrets.B2C_TENANT_NAME }}|g' ./credless-in-azure-samples/part-5/azure-ad-b2c/custom-policies/TrustFrameworkBase.xml
@@ -235,4 +252,4 @@ jobs:
     - name: 'Update B2C App Registration'
       run: |
         export replyUrlB2C=${{ needs.Deploy.outputs.replyUrlB2C }}
-        az ad app update --id ${{ secrets.B2C_APP_CLIENT_ID }} --web-home-page-url "https://$replyUrlB2C/signin-oidc"  --web-redirect-uris "https://$replyUrlB2C/signin-oidc" 
+        az ad app update --id ${{ steps.appregb2c.outputs.appId }}  --web-redirect-uris "https://$replyUrlB2C/signin-oidc" --enable-id-token-issuance true
