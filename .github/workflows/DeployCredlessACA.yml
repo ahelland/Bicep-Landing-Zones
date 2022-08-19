@@ -255,7 +255,7 @@ jobs:
     - name: 'Update App Registration'
       run: |
         export replyUrl=${{ steps.getReplyUrl.outputs.replyUrl }}
-        az ad app update --id ${{ steps.appreg.outputs.appId }} --web-home-page-url "https://$replyUrl"  --web-redirect-uris "https://$replyUrl/.auth/login/aad/callback"  
+        az ad app update --id ${{ steps.appreg.outputs.appId }} --enable-id-token-issuance true --web-home-page-url "https://$replyUrl"  --web-redirect-uris "https://$replyUrl/.auth/login/aad/callback"  
 
   Deploy-B2C:
     runs-on: ubuntu-latest
