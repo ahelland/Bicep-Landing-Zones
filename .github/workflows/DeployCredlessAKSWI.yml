@@ -169,7 +169,7 @@ jobs:
     - name: Get Managed Identity Id
       id: k8sMI
       run: |
-        appId=$(az identity show --resource-group rg-${{ github.event.inputs.environment }}-aks --name aks-identity --query clientId -o tsv)
+        appId=$(az identity show --resource-group rg-${{ github.event.inputs.environment }}-aks --name aks-identity --query clientId)
         export APPLICATION_CLIENT_ID=$appId
         echo "::set-output name=APPLICATION_CLIENT_ID::$APPLICATION_CLIENT_ID"
 
