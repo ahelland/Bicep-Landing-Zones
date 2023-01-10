@@ -224,7 +224,7 @@ jobs:
       # Step 3 - Replace variables in graph-permission.json
       # Step 4 - Apply graph-permission.json
       run: |          
-       $graphObject=(az rest --method GET --url "https://graph.microsoft.com/v1.0/servicePrincipals(appId=%2700000003-0000-0000-c000-000000000000%27)" | ConvertFrom-Json)       
+       graphObject=$(az rest --method GET --url "https://graph.microsoft.com/v1.0/servicePrincipals(appId=%2700000003-0000-0000-c000-000000000000%27)" | ConvertFrom-Json)       
        export appRoleId="df021288-bdef-4463-88db-98f22de89214"
        sed -i 's|${PRINCIPAL_ID}|${{ steps.k8sMI.outputs.APPLICATION_PRINCIPAL_ID }}|g; s|${RESOURCE_ID}|${{ $graphObject.id }}|g; s|${APP_ROLE_ID}|${{ appRoleId }}|g' ./credless-in-azure-samples/part-4/graph-permission.json
        az rest --method POST --url "https://graph.microsoft.com/v1.0/servicePrincipals/${{ steps.k8sMI.outputs.APPLICATION_PRINCIPAL_ID }}/appRoleAssignedTo" --headers "Content-Type=application/json" --body @graph-permission.json
