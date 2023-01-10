@@ -171,7 +171,10 @@ jobs:
       run: |
         appId=$(az identity show --resource-group rg-${{ github.event.inputs.environment }}-aks --name aks-identity --query clientId -o tsv)
         export APPLICATION_CLIENT_ID=$appId
+        principalId=$(az identity show --resource-group rg-${{ github.event.inputs.environment }}-aks --name aks-identity --query principalId -o tsv)
+        export APPLICATION_PRINCIPAL_ID=$principalId
         echo "::set-output name=APPLICATION_CLIENT_ID::$APPLICATION_CLIENT_ID"
+        echo "::set-output name=APPLICATION_PRINCIPAL_ID::$APPLICATION_PRINCIPAL_ID"
 
     - name: Install Service Account
       env:
@@ -217,8 +220,8 @@ jobs:
       # Note that the grant/consent step will not work unless extra permissions are given to the GitHub Action Service Principal,
       # but it will appear to go through and not present an error for the pipeline execution. 
       run: |
-        az ad app permission add --id ${{ steps.k8sMI.outputs.APPLICATION_CLIENT_ID }} --api 00000003-0000-0000-c000-000000000000 --api-permissions df021288-bdef-4463-88db-98f22de89214=Role        
-        az ad app permission grant --id ${{ steps.k8sMI.outputs.APPLICATION_CLIENT_ID }} --api 00000003-0000-0000-c000-000000000000
+        az ad app permission add --id ${{ steps.k8sMI.outputs.APPLICATION_PRINCIPAL_ID }} --api 00000003-0000-0000-c000-000000000000 --api-permissions df021288-bdef-4463-88db-98f22de89214=Role        
+        az ad app permission grant --id ${{ steps.k8sMI.outputs.APPLICATION_PRINCIPAL_ID }} --api 00000003-0000-0000-c000-000000000000
 
     - name: Deploy workload-identity-app
       env:
