@@ -236,7 +236,7 @@ jobs:
       # Step 4 - Apply graph-permission.json
       run: |                
        sed -i 's|${PRINCIPAL_ID}|${{ steps.k8sMI.outputs.APPLICATION_PRINCIPAL_ID }}|g; s|${RESOURCE_ID}|${{ steps.graphAttr.outputs.RESOURCE_ID }}|g; s|${APP_ROLE_ID}|${{ steps.graphAttr.outputs.APP_ROLE_ID }}|g' ./credless-in-azure-samples/part-4/graph-permission.json
-       az rest --method POST --url "https://graph.microsoft.com/v1.0/servicePrincipals/${{ steps.k8sMI.outputs.APPLICATION_PRINCIPAL_ID }}/appRoleAssignedTo" --headers "Content-Type=application/json" --body @graph-permission.json
+       az rest --method POST --url "https://graph.microsoft.com/v1.0/servicePrincipals/${{ steps.k8sMI.outputs.APPLICATION_PRINCIPAL_ID }}/appRoleAssignedTo" --headers "Content-Type=application/json" --body @./credless-in-azure-samples/part-4/graph-permission.json
     #  az ad app permission add --id ${{ steps.k8sMI.outputs.APPLICATION_PRINCIPAL_ID }} --api 00000003-0000-0000-c000-000000000000 --api-permissions df021288-bdef-4463-88db-98f22de89214=Role        
     #  az ad app permission grant --id ${{ steps.k8sMI.outputs.APPLICATION_PRINCIPAL_ID }} --api 00000003-0000-0000-c000-000000000000
 
