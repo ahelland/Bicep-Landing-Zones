@@ -122,9 +122,9 @@ jobs:
       run: |
         az aks get-credentials --resource-group rg-${{ github.event.inputs.environment }}-aks --name ${{ github.event.inputs.environment }}-aks
 
-    - name: Get kubelogin
-      run: |
-        brew install Azure/kubelogin/kubelogin
+    #- name: Get kubelogin
+    #  run: |
+    #    brew install Azure/kubelogin/kubelogin
 
     - name: Convert kubeconfig for non-interactive use
       run: kubelogin convert-kubeconfig -l workloadidentity
