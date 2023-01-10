@@ -218,12 +218,15 @@ jobs:
 
     - name: Graph Properties
       id: graphAttr
-      run: |
-        graphObject=$(az rest --method GET --url "https://graph.microsoft.com/v1.0/servicePrincipals(appId=%2700000003-0000-0000-c000-000000000000%27)" | ConvertFrom-Json).id
-        export RESOURCE_ID=$graphObject
-        export APP_ROLE_ID="df021288-bdef-4463-88db-98f22de89214"
-        echo "::set-output name=RESOURCE_ID::$RESOURCE_ID"
-        echo "::set-output name=APP_ROLE_ID::$APP_ROLE_ID"
+      uses: azure/powershell@v1
+      with:
+        inlineScript: |
+          graphObject=$(az rest --method GET --url "https://graph.microsoft.com/v1.0/servicePrincipals(appId=%2700000003-0000-0000-c000-000000000000%27)" | ConvertFrom-Json).id
+          export RESOURCE_ID=$graphObject
+          export APP_ROLE_ID="df021288-bdef-4463-88db-98f22de89214"
+          echo "::set-output name=RESOURCE_ID::$graphObject"
+          echo "::set-output name=APP_ROLE_ID::$APP_ROLE_ID"
+        azPSVersion: "latest"
 
     - name: Add Permissions (MS Graph User.Read.All)
       # Note that the grant/consent step will not work unless extra permissions are given to the GitHub Action Service Principal,
