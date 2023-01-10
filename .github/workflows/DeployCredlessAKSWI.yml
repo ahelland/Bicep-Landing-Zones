@@ -92,7 +92,8 @@ jobs:
       id: groupcreate
       run: |
         export appName=${{ github.event.inputs.appName }}
-        adminGroupId=$(az ad group create --display-name $appName --mail-nickname $appName --query objectId)
+        az ad group create --display-name $appName --mail-nickname $appName
+        adminGroupId=$(az ad group show -g $appName --query id)
         echo "::set-output name=adminGroupId::$adminGroupId"
 
     - name: Deploy AKS and ACR
