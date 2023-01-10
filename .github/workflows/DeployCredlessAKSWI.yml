@@ -216,12 +216,12 @@ jobs:
         cd ./credless-in-azure-samples/part-4/workload-identity-app/workload-identity-frontend
         az acr build --registry ${{ steps.getACRName.outputs.acrName }} --image workload-identity-frontend:${{ github.run_number }} .
 
-    - name: Add Permissions (MS Graph User.Read.All)
-      # Note that the grant/consent step will not work unless extra permissions are given to the GitHub Action Service Principal,
-      # but it will appear to go through and not present an error for the pipeline execution. 
-      run: |
-        az ad app permission add --id ${{ steps.k8sMI.outputs.APPLICATION_PRINCIPAL_ID }} --api 00000003-0000-0000-c000-000000000000 --api-permissions df021288-bdef-4463-88db-98f22de89214=Role        
-        az ad app permission grant --id ${{ steps.k8sMI.outputs.APPLICATION_PRINCIPAL_ID }} --api 00000003-0000-0000-c000-000000000000
+    #- name: Add Permissions (MS Graph User.Read.All)
+    #  # Note that the grant/consent step will not work unless extra permissions are given to the GitHub Action Service Principal,
+    #  # but it will appear to go through and not present an error for the pipeline execution. 
+    #  run: |
+    #  az ad app permission add --id ${{ steps.k8sMI.outputs.APPLICATION_PRINCIPAL_ID }} --api 00000003-0000-0000-c000-000000000000 --api-permissions df021288-bdef-4463-88db-98f22de89214=Role        
+    #  az ad app permission grant --id ${{ steps.k8sMI.outputs.APPLICATION_PRINCIPAL_ID }} --api 00000003-0000-0000-c000-000000000000
 
     - name: Deploy workload-identity-app
       env:
