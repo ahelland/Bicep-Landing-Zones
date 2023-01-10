@@ -1,0 +1,5 @@
+{
+    "principalId": "${PRINCIPAL_ID}",
+    "resourceId":  "${RESOURCE_ID}",
+    "appRoleId":   "${APP_ROLE_ID}"
+}

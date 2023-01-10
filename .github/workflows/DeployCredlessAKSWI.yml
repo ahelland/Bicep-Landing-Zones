@@ -216,10 +216,18 @@ jobs:
         cd ./credless-in-azure-samples/part-4/workload-identity-app/workload-identity-frontend
         az acr build --registry ${{ steps.getACRName.outputs.acrName }} --image workload-identity-frontend:${{ github.run_number }} .
 
-    #- name: Add Permissions (MS Graph User.Read.All)
-    #  # Note that the grant/consent step will not work unless extra permissions are given to the GitHub Action Service Principal,
-    #  # but it will appear to go through and not present an error for the pipeline execution. 
-    #  run: |
+    - name: Add Permissions (MS Graph User.Read.All)
+      # Note that the grant/consent step will not work unless extra permissions are given to the GitHub Action Service Principal,
+      # but it will appear to go through and not present an error for the pipeline execution. 
+      # Step 1 - Get Service Principal Id for MS Graph (appId is always 00000003-0000-0000-c000-000000000000)
+      # Step 2 - Assign Role Id to variable
+      # Step 3 - Replace variables in graph-permission.json
+      # Step 4 - Apply graph-permission.json
+      run: |          
+       $graphObject=(az rest --method GET --url "https://graph.microsoft.com/v1.0/servicePrincipals(appId=%2700000003-0000-0000-c000-000000000000%27)" | ConvertFrom-Json)       
+       export appRoleId="df021288-bdef-4463-88db-98f22de89214"
+       sed -i 's|${PRINCIPAL_ID}|${{ steps.k8sMI.outputs.APPLICATION_PRINCIPAL_ID }}|g; s|${RESOURCE_ID}|${{ $graphObject.id }}|g; s|${APP_ROLE_ID}|${{ appRoleId }}|g' ./credless-in-azure-samples/part-4/graph-permission.json
+       az rest --method POST --url "https://graph.microsoft.com/v1.0/servicePrincipals/${{ steps.k8sMI.outputs.APPLICATION_PRINCIPAL_ID }}/appRoleAssignedTo" --headers "Content-Type=application/json" --body @graph-permission.json
     #  az ad app permission add --id ${{ steps.k8sMI.outputs.APPLICATION_PRINCIPAL_ID }} --api 00000003-0000-0000-c000-000000000000 --api-permissions df021288-bdef-4463-88db-98f22de89214=Role        
     #  az ad app permission grant --id ${{ steps.k8sMI.outputs.APPLICATION_PRINCIPAL_ID }} --api 00000003-0000-0000-c000-000000000000
 
