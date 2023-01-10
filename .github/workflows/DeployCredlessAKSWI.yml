@@ -228,6 +228,7 @@ jobs:
         azPSVersion: "latest"
 
     - name: Add Permissions (MS Graph User.Read.All)
+      continue-on-error: true
       # Note that the grant/consent step will not work unless extra permissions are given to the GitHub Action Service Principal,
       # but it will appear to go through and not present an error for the pipeline execution. 
       # Step 1 - Get Service Principal Id for MS Graph (appId is always 00000003-0000-0000-c000-000000000000)
