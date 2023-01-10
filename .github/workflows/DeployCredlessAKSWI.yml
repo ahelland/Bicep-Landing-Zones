@@ -187,7 +187,7 @@ jobs:
       continue-on-error: true            
       run: | 
         export SERVICE_ACCOUNT_ISSUER=${{ steps.oidc.outputs.oidcUrl }}           
-        az identity federated-credential create --name aksFederatedIdentity --identity-name "${USER_ASSIGNED_IDENTITY_NAME}" --resource-group rg-${{ github.event.inputs.environment }}-aks --issuer "${SERVICE_ACCOUNT_ISSUER}" --subject system:serviceaccount:"${SERVICE_ACCOUNT_NAMESPACE}":"${SERVICE_ACCOUNT_NAME}"
+        az identity federated-credential create --name aksFederatedIdentity --identity-name aks-identity --resource-group rg-${{ github.event.inputs.environment }}-aks --issuer "${SERVICE_ACCOUNT_ISSUER}" --subject system:serviceaccount:"${SERVICE_ACCOUNT_NAMESPACE}":"${SERVICE_ACCOUNT_NAME}"
 
     # We are making the assumption you have only one registry in the ACR resource group
     - name: Retrieve name of Container Registry
