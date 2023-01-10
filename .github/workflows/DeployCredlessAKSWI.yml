@@ -180,7 +180,7 @@ jobs:
         AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}          
       run: |        
         export AZURE_FEDERATED_TOKEN_FILE=${RUNNER_TEMP}/.token
-        sed -i 's|${SERVICE_ACCOUNT_NAMESPACE}|azure-workload-identity-system|g; s|${SERVICE_ACCOUNT_NAME}|workload-identity-sa|g; s|${APPLICATION_CLIENT_ID}|${{ steps.k8sMI.outputs.APPLICATION_CLIENT_ID }}|g' ./credless-in-azure-samples/part-4/service-account.yaml
+        sed -i 's|${APPLICATION_CLIENT_ID}|${{ steps.k8sMI.outputs.APPLICATION_CLIENT_ID }}|g' ./credless-in-azure-samples/part-4/service-account-wi.yaml
         kubectl apply -f ./credless-in-azure-samples/part-4/service-account-wi.yaml    
 
     - name: Establish Federated Credential  
