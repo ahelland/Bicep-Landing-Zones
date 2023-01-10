@@ -53,7 +53,7 @@ module aks_vnet 'br/public:network/virtual-network:1.0.1' = {
   }
 }
 
-module aks '../../modules/azure-kubernetes-service/aks.bicep' = {
+module aks '../../modules/azure-kubernetes-service/aks-wi.bicep' = {
   scope: rg_aks
   name: 'aks'
   params: {
