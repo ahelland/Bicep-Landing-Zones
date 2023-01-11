@@ -223,9 +223,9 @@ jobs:
       with:
         inlineScript: |
           $graphObject=(az rest --method GET --url "https://graph.microsoft.com/v1.0/servicePrincipals(appId=%2700000003-0000-0000-c000-000000000000%27)" | ConvertFrom-Json).id
-          $APP_ROLE_ID="df021288-bdef-4463-88db-98f22de89214"          
-          echo "RESOURCE_ID=$graphObject" >> $GITHUB_OUTPUT
-          echo "APP_ROLE_ID=$APP_ROLE_ID" >> $GITHUB_OUTPUT
+          $APP_ROLE_ID="df021288-bdef-4463-88db-98f22de89214"
+          echo "::set-output name=RESOURCE_ID::$graphObject"
+          echo "::set-output name=APP_ROLE_ID::$APP_ROLE_ID"                   
         azPSVersion: "latest"
 
     - name: Add Permissions (MS Graph User.Read.All)
