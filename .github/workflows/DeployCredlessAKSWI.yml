@@ -190,7 +190,7 @@ jobs:
       continue-on-error: true            
       run: | 
         export SERVICE_ACCOUNT_ISSUER=${{ steps.oidc.outputs.oidcUrl }}           
-        az identity federated-credential create --name aksFederatedIdentity --identity-name aks-identity --resource-group rg-${{ github.event.inputs.environment }}-aks --issuer "${SERVICE_ACCOUNT_ISSUER}" --subject system:serviceaccount:"${SERVICE_ACCOUNT_NAMESPACE}":"${SERVICE_ACCOUNT_NAME}"
+        az identity federated-credential create --name aksFederatedIdentity --identity-name aks-identity --resource-group rg-${{ github.event.inputs.environment }}-aks --issuer "${SERVICE_ACCOUNT_ISSUER}" --subject system:serviceaccount:azure-workload-identity-system:workload-identity-sa
 
     # We are making the assumption you have only one registry in the ACR resource group
     - name: Retrieve name of Container Registry
@@ -217,6 +217,7 @@ jobs:
         az acr build --registry ${{ steps.getACRName.outputs.acrName }} --image workload-identity-frontend:${{ github.run_number }} .
 
     - name: Graph Properties
+      # Because: https://gotoguy.blog/2022/03/15/add-graph-application-permissions-to-managed-identity-using-graph-explorer/
       id: graphAttr
       uses: azure/powershell@v1
       with:
