@@ -31,7 +31,7 @@ jobs:
     needs: lint
     environment: ${{ github.event.inputs.environment }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       
       - name: 'Az CLI login'
         uses: azure/login@v1
@@ -56,7 +56,7 @@ jobs:
     needs: Validate
     environment: ${{ github.event.inputs.environment }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       
       - name: 'Az CLI login'
         uses: azure/login@v1
@@ -79,7 +79,7 @@ jobs:
     needs: What-if
     environment: ${{ github.event.inputs.environment }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     
     - name: 'Az CLI login'
       uses: azure/login@v1
