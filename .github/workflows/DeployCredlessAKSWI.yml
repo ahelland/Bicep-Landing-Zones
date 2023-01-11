@@ -115,8 +115,8 @@ jobs:
       run: |        
         az extension add --name aks-preview        
         az extension update --name aks-preview
-        oidcUrl=$(az aks show --resource-group rg-${{ github.event.inputs.environment }}-aks --name ${{ github.event.inputs.environment }}-aks --query "oidcIssuerProfile.issuerUrl" -o tsv)
-        echo "::set-output name=oidcUrl::$oidcUrl"
+        oidcUrl=$(az aks show --resource-group rg-${{ github.event.inputs.environment }}-aks --name ${{ github.event.inputs.environment }}-aks --query "oidcIssuerProfile.issuerUrl" -o tsv)        
+        echo "oidcUrl=$oidcUrl" >> $GITHUB_OUTPUT
     
     - name: Get AKS Creds      
       run: |
@@ -143,8 +143,8 @@ jobs:
                 echo "Signature: $(echo "${1}" | awk -F'.' '{print $3}')"
             fi
         }
-        jwtd $IDTOKEN
-        echo "::set-output name=idToken::${IDTOKEN}"    
+        jwtd $IDTOKEN        
+        echo "idToken=${IDTOKEN}" >> $GITHUB_OUTPUT    
 
     #- name: Install Mutating Admission Webhook
     #  env:
@@ -172,9 +172,9 @@ jobs:
         appId=$(az identity show --resource-group rg-${{ github.event.inputs.environment }}-aks --name aks-identity --query clientId -o tsv)
         export APPLICATION_CLIENT_ID=$appId
         principalId=$(az identity show --resource-group rg-${{ github.event.inputs.environment }}-aks --name aks-identity --query principalId -o tsv)
-        export APPLICATION_PRINCIPAL_ID=$principalId
-        echo "::set-output name=APPLICATION_CLIENT_ID::$APPLICATION_CLIENT_ID"
-        echo "::set-output name=APPLICATION_PRINCIPAL_ID::$APPLICATION_PRINCIPAL_ID"
+        export APPLICATION_PRINCIPAL_ID=$principalId        
+        echo "APPLICATION_CLIENT_ID=$APPLICATION_CLIENT_ID" >> $GITHUB_OUTPUT
+        echo "APPLICATION_PRINCIPAL_ID=$APPLICATION_PRINCIPAL_ID" >> $GITHUB_OUTPUT
 
     - name: Install Service Account
       env:
@@ -198,8 +198,8 @@ jobs:
       uses: azure/powershell@v1
       with: 
         inlineScript: |
-          $acrName=(az acr list -g rg-${{ github.event.inputs.environment }}-aks-acr -o tsv --query [0].name)
-          echo "::set-output name=acrName::$acrName"
+          $acrName=(az acr list -g rg-${{ github.event.inputs.environment }}-aks-acr -o tsv --query [0].name)          
+          echo "acrName=$acrName" >> $GITHUB_OUTPUT
         azPSVersion: "latest"
 
     - name: Integrate ACR and AKS
@@ -223,9 +223,9 @@ jobs:
       with:
         inlineScript: |
           $graphObject=(az rest --method GET --url "https://graph.microsoft.com/v1.0/servicePrincipals(appId=%2700000003-0000-0000-c000-000000000000%27)" | ConvertFrom-Json).id
-          $APP_ROLE_ID="df021288-bdef-4463-88db-98f22de89214"
-          echo "::set-output name=RESOURCE_ID::$graphObject"
-          echo "::set-output name=APP_ROLE_ID::$APP_ROLE_ID"
+          $APP_ROLE_ID="df021288-bdef-4463-88db-98f22de89214"          
+          echo "RESOURCE_ID=$graphObject" >> $GITHUB_OUTPUT
+          echo "APP_ROLE_ID=$APP_ROLE_ID" >> $GITHUB_OUTPUT
         azPSVersion: "latest"
 
     - name: Add Permissions (MS Graph User.Read.All)
