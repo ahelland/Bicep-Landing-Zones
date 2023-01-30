@@ -1,0 +1,185 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":null,"items":[{"name":"csharp","languageName":"C#","aliases":["c#","cs"]},{"name":"fsharp","languageName":"F#","aliases":["f#","fs"]},{"name":"pwsh","languageName":"PowerShell","aliases":["powershell"]},{"name":"javascript","languageName":"JavaScript","aliases":["js"]},{"name":"html","languageName":"HTML"},{"name":"sql","languageName":"SQL"},{"name":"kql","languageName":"KQL"},{"name":"mermaid","languageName":"Mermaid"},{"name":"httpRequest","languageName":"http"},{"name":"value"}]}}
+
+#!markdown
+
+### Azure Kubernetes Service with Workload Identity - Playbook
+
+#!markdown
+
+This is a collection of scripts that will create an Azure Kubernetes Service cluster (with Workload Identity enabled) and accompanying resources. It also configures DNS integration and certificate enrollment. At the end a sample app is deployed.
+
+The goal is to keep it as generic as possible - in other words you should not have to edit a long list of hard-coded values when you run it on your machine. Some things, like your custom domain name, is something you need to supply yourself :)
+
+#!pwsh
+
+# Uncomment if you're not already logged in
+# az login
+
+# If you have several subscriptions you may have to select the correct one to use.
+# az account set -s 'foo'
+
+#!pwsh
+
+#Define static/custom variable values
+$SUB_ID=(az account show --query id -o tsv)
+
+$ENVIRONMENT='dev'
+$RG_AKS="rg-$ENVIRONMENT-aks"
+$CLUSTER_NAME="$ENVIRONMENT-aks"
+$RG_DNS="rg-core-dns"
+$DNS_ZONE="contoso.com"
+
+$ACME_EMAIL="bob@contoso.com"
+
+#!pwsh
+
+# Create an Azure AD AKS Admin Group
+#$adminGroupId=(az ad group create --display-name aks-admins --mail-nickname aks-admins --query objectId)
+
+# Or get the id of an existing Azure AD AKS Admin Group
+$adminGroupId=(az ad group show -g aks-admins --query id -o tsv)
+
+# Deploy AKS, ACR & vnet
+az deployment sub create --location norwayeast --name 1 --template-file .\main.bicep --parameters .\azuredeploy.parameters.json adminGroupId=$adminGroupId env=$ENVIRONMENT
+
+# Get credentials
+az aks get-credentials --resource-group $RG_AKS --name $CLUSTER_NAME --overwrite-existing
+
+## Integrate ACR and AKS
+$acrName=(az acr list -g "rg-$ENVIRONMENT-aks-acr" -o tsv --query [0].name)
+az aks update -n $CLUSTER_NAME -g $RG_AKS --attach-acr $acrName
+
+#!pwsh
+
+# This configures the link between the infra workload identity and the system service account
+
+# Get OIDCUrl (issuer of tokens for the federated credential)
+$oidcUrl=(az aks show --resource-group $RG_AKS --name $CLUSTER_NAME --query "oidcIssuerProfile.issuerUrl" -o tsv)
+
+#Prep service-account.yaml
+$appId=(az identity show --resource-group $RG_AKS --name aks-infra-identity --query clientId -o tsv)
+$serviceAccount = (Get-Content (".\service-account.yaml")) | % {$_.replace('${USER_ASSIGNED_CLIENT_ID}',$appId)} | Out-String
+
+# Install Service Account
+$serviceAccount | kubectl create -f -
+
+# Establish Federated Credential 
+az identity federated-credential create --name aksFederatedIdentity --identity-name aks-infra-identity --resource-group $RG_AKS `
+--issuer $oidcUrl --subject system:serviceaccount:azure-workload-identity-system:workload-identity-sa
+
+#!pwsh
+
+# Installation of NGINX as ingress component
+
+# Add the ingress-nginx repository
+./helm.exe repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+./helm.exe repo update
+
+# Use Helm to deploy an NGINX ingress controller
+./helm.exe install nginx-ingress ingress-nginx/ingress-nginx --create-namespace --namespace nginx `
+--set controller.replicaCount=2 --set controller.nodeSelector."kubernetes\.io/os"=linux `
+--set defaultBackend.nodeSelector."kubernetes\.io/os"=linux --set controller.admissionWebhooks.patch.nodeSelector."kubernetes\.io/os"=linux
+
+# Add default ingress class (to make available across namespaces)
+kubectl apply -f .\IngressClass.yaml
+
+# Build & Deploy default/dummy backend to registry
+cd .\nginx-default-backend
+az acr build --registry $acrName  --image nginx-default-backend:latest .
+cd -
+
+# Deploy nginx-default-backend
+$backend = (Get-Content (".\nginx-default-backend.yaml")) | % {$_.replace('${ACR_NAME}',$acrName)} | Out-String
+$backend | kubectl create -f -
+
+#!pwsh
+
+# Configuration of ExternalDNS for integration with Azure DNS.
+# Note: requires that a zone is already created and configured in the current subscription.
+
+# The kubelet needs permissions to the DNS zone
+$PRINCIPAL_ID=$(az aks show -g $RG_AKS --name $CLUSTER_NAME --query "identityProfile.kubeletidentity.objectId" --output tsv)
+$DNS_ID=$(az network dns zone show --name $DNS_ZONE -g $RG_DNS --query "id" --output tsv)
+az role assignment create --role "DNS Zone Contributor" --assignee $PRINCIPAL_ID --scope $DNS_ID
+
+# ExternalDNS.yaml requires a JSON pointing to usage of the managed identity of the nodepool
+$tenantId=(az account show --query tenantId -o tsv)
+$subscriptionId=(az account show --query id -o tsv)
+$json = @{tenantId=$tenantId; subscriptionId=$subscriptionId; resourceGroup=$AZURE_DNS_ZONE_RESOURCE_GROUP; useManagedIdentityExtension=$true} | ConvertTo-Json
+$byteArray = [System.Text.Encoding]::UTF8.GetBytes($json)
+$base64 = [System.Convert]::ToBase64String($byteArray)
+
+# Install and apply config
+$extdns = (Get-Content (".\ExternalDNS.yaml")) | % {$_.replace('${az-conf-json}',$base64)} `
+| % {$_.replace('${DOMAIN}',$DNS_ZONE)} | % {$_.replace('${DNS_RG}',$DNS_RG)} | Out-String
+$extdns | kubectl create -f -
+
+#!pwsh
+
+# Installation and configuration of CertManager for Let's Encrypt certificates
+
+# The managed identity needs DNS permissions
+$USER_ASSIGNED_CLIENT_ID=(az identity show --resource-group $RG_AKS --name aks-infra-identity --query clientId -o tsv)
+
+az role assignment create --role "DNS Zone Contributor" --assignee $USER_ASSIGNED_CLIENT_ID --scope $DNS_ID
+
+$oidcUrl=(az aks show --resource-group $RG_AKS --name $CLUSTER_NAME --query "oidcIssuerProfile.issuerUrl" -o tsv)
+az identity federated-credential create --name aksFederatedIdentity --identity-name aks-infra-identity --resource-group $RG_AKS --issuer $oidcUrl `
+--subject system:serviceaccount:cert-manager:cert-manager
+
+# Installing CertManager
+# Add the Jetstack Helm repository
+./helm.exe repo add jetstack https://charts.jetstack.io
+
+# Update your local Helm chart repository cache
+./helm.exe repo update 
+
+# Install the cert-manager Helm chart
+./helm.exe install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --set installCRDs=true -f .\CertManagerWI.yaml
+
+# Apply configuration
+$certman = (Get-Content (".\CertManager.yaml")) | % {$_.replace('${USER_ASSIGNED_CLIENT_ID}',$USER_ASSIGNED_CLIENT_ID)} `
+| % {$_.replace('${DOMAIN}',$DNS_ZONE)} | % {$_.replace('${DNS_RG}',$RG_DNS)} `
+| % {$_.replace('${SUB_ID}',$SUB_ID)} | % {$_.replace('${ACME_EMAIL}',$ACME_EMAIL)} | Out-String
+$certman | kubectl apply -f -
+
+#!pwsh
+
+#Workload app front & back
+
+$USER_ASSIGNED_CLIENT_ID=(az identity show --resource-group $RG_AKS --name aks-app-identity --query clientId -o tsv)
+
+# Build & Deploy frontend
+cd .\workload-identity-app-dotnet7\workload-identity-frontend-dotnet7
+az acr build --registry $acrName  --image wi-front:latest .
+cd -
+
+# Build & Deploy backend
+cd .\workload-identity-app-dotnet7\workload-identity-backend-dotnet7
+az acr build --registry $acrName  --image wi-back:latest .
+cd -
+
+# Create for workload service account
+$oidcUrl=(az aks show --resource-group $RG_AKS --name $CLUSTER_NAME --query "oidcIssuerProfile.issuerUrl" -o tsv)
+az identity federated-credential create --name aksFederatedIdentity --identity-name aks-app-identity --resource-group $RG_AKS --issuer $oidcUrl --subject system:serviceaccount:workload:workload-identity-sa
+
+# Permissions for aks-app-identiy
+$principalId=$(az identity show --resource-group $RG_AKS --name aks-app-identity --query principalId -o tsv)
+# Application Id for the MS Graph is always 00000003-0000-0000-c000-000000000000
+# Note: $filter must be urlencoded as %24filter
+$graphObject=(az rest --method GET --url "https://graph.microsoft.com/v1.0/servicePrincipals?%24filter=appId eq '00000003-0000-0000-c000-000000000000'" | ConvertFrom-Json).value.id
+#Hard-wired value for User.Read.All
+$APP_ROLE_ID="df021288-bdef-4463-88db-98f22de89214"
+
+# az rest is picky about the JSON payload so remove whitespace and escape the quotation marks
+$json = (@{principalId=$principalId; resourceId=$graphObject; appRoleId=$APP_ROLE_ID } | ConvertTo-Json -Compress).Replace('"', '\"')
+echo $json
+az rest --method POST --url "https://graph.microsoft.com/v1.0/servicePrincipals/${principalId}/appRoleAssignedTo" --headers "Content-Type=application/json" --body $json
+
+# Deploy workload-identity-app
+# Prep file with correct values first
+$wiApp = (Get-Content (".\workload-identity-app-dotnet7\workload-identity-app.yaml")) | % {$_.replace('${USER_ASSIGNED_CLIENT_ID}',$USER_ASSIGNED_CLIENT_ID)}` 
+| % {$_.replace('${ACR_NAME}',$acrName)} | % {$_.replace('${DOMAIN}',$DNS_ZONE)} | Out-String
+$wiApp | kubectl apply -f -

@@ -1,0 +1,138 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: workload
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    azure.workload.identity/client-id: ${USER_ASSIGNED_CLIENT_ID}
+  labels:
+    azure.workload.identity/use: "true"
+  name: workload-identity-sa
+  namespace: workload
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:  
+  namespace: workload
+  name: workload-identity-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: workload-identity-backend
+  template:
+    metadata:      
+      namespace: workload
+      labels:
+        app: workload-identity-backend
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: workload-identity-sa
+      nodeSelector:
+        "kubernetes.io/os": linux
+      containers:
+      - name: workload-identity-backend
+        image: ${ACR_NAME}.azurecr.io/wi-back:latest
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        ports:
+        - containerPort: 80
+          name: back       
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: workload
+  name: workload-identity-backend
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: workload-identity-backend
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:  
+  namespace: workload
+  name: workload-identity-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: workload-identity-frontend
+  template:
+    metadata:      
+      namespace: workload
+      labels:
+        app: workload-identity-frontend
+    spec:
+      nodeSelector:
+        "kubernetes.io/os": linux
+      containers:
+      - name: workload-identity-frontend
+        image: ${ACR_NAME}.azurecr.io/wi-front:latest
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        ports:
+        - containerPort: 80
+        env:
+        - name: BACK
+          value: "workload-identity-backend"
+        - name: API__api_address
+          value: "http://workload-identity-backend:80/api/graph"
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Development"
+---
+apiVersion: v1
+kind: Service
+metadata: 
+  namespace: workload
+  name: workload-identity-frontend
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: wi-f.${DOMAIN}
+    service.beta.kubernetes.io/azure-dns-label-name: wi-f.${DOMAIN}
+spec:  
+  ports:
+  - port: 80
+  selector:
+    app: workload-identity-frontend
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: workload
+  name: workload-identity-ingress  
+  annotations:        
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  ingressClassName: nginx  
+  tls:
+  - hosts:
+    # Will be replaced with the domain you have configured
+    - wi-f.${DOMAIN}
+    secretName: tls-secret-wi-f
+  rules:
+  - host: wi-f.${DOMAIN}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: workload-identity-frontend
+            port:
+              number: 80

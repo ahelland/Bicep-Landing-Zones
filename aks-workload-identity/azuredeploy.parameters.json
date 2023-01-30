@@ -1,0 +1,22 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "resourceTags": {
+            "value": {
+                "IaC": "Bicep",
+                "Source": "GitHub" 
+            }
+        },
+        "location": {
+            "value": "norwayeast"
+        },
+        "k8Sversion":{
+            "value": "1.25.4"
+        },
+        "vmSize":{
+            "value": "Standard_DS2_v2"
+        }
+
+    }
+}
